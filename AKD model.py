@@ -1,0 +1,35 @@
+import streamlit as st
+import gspread
+from google.oauth2.service_account import Credentials
+import datetime
+
+# 连接 Google Sheets
+def get_gsheet_client():
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    creds = Credentials.from_service_account_file("C:/Users/kevin/Desktop/研究資料/研究資料/Kevin research/token.json", scopes=scope)
+    client = gspread.authorize(creds)
+    return client
+
+def save_to_gsheet(data):
+    client = get_gsheet_client()
+    sheet = client.open("web data").worksheet("chemo data")  # 选择 chemo data 这个 Sheet
+    sheet.append_row(data)  # 追加数据到最后一行
+
+# Streamlit UI
+st.title("Chemotherapy Data Entry")
+
+# 输入栏位
+id_no = st.text_input("Patient ID")  
+gender = st.selectbox("Gender", ["Male", "Female"])  
+weight = st.number_input("Weight (kg)", min_value=0.0, format="%.2f")  
+age = st.number_input("Age", min_value=0, format="%d")  
+treatment_date = st.date_input("Treatment Date", datetime.date.today())  # 直接输入日期
+cycle_no = st.number_input("Cycle Number", min_value=1, format="%d")  
+cis_dose = st.number_input("Cisplatin Dose (mg)", min_value=0.0, format="%.2f")  
+carb_dose = st.number_input("Carboplatin Dose (mg)", min_value=0.0, format="%.2f")  
+aki_history = st.checkbox("AKI History (Check if Yes)")  
+
+if st.button("Submit"):
+    data = [id_no, gender, weight, age, str(treatment_date), cycle_no, cis_dose, carb_dose, int(aki_history)]
+    save_to_gsheet(data)
+    st.success("✅ Data submitted successfully!")
