@@ -6,7 +6,7 @@ import datetime
 # 连接 Google Sheets
 def get_gsheet_client():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    creds = Credentials.from_service_account_file("C:/Users/kevin/Desktop/研究資料/研究資料/Kevin research/token.json", scopes=scope)
+    creds = Credentials.from_service_account_file("C:/Users/kevin/Desktop/研究資料/研究資料/Kevin research/web tool/token.json", scopes=scope)
     client = gspread.authorize(creds)
     return client
 
