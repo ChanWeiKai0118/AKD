@@ -1,0 +1,11 @@
+streamlit
+joblib
+pandas
+numpy
+scikit-learn
+requests
+imblearn
+lightgbm
+qrcode
+gspread
+datetime
