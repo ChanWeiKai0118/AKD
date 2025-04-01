@@ -18,7 +18,7 @@ def test_google_sheets():
     except Exception as e:
         print("❌ 連接失敗，錯誤訊息：", e)
 
-test_google_sheets()
+
 
 def get_gsheet_client():
     creds = Credentials.from_service_account_info(st.secrets["google_service_account"])
@@ -45,6 +45,7 @@ carb_dose = st.number_input("Carboplatin Dose (mg)", min_value=0.0, format="%.1f
 aki_history = st.checkbox("AKI History (Check if Yes)")  
 
 if st.button("Submit"):
+    test_google_sheets()
     data = [id_no, gender, weight, age, str(treatment_date), cycle_no, cis_dose, carb_dose, int(aki_history)]
     save_to_gsheet(data)
     st.success("✅ Data submitted successfully!")
