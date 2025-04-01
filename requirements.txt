@@ -9,3 +9,4 @@ lightgbm
 qrcode
 gspread
 datetime
+streamlit_gsheets
