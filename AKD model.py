@@ -22,12 +22,12 @@ st.title("Chemotherapy Data Entry")
 # 输入栏位
 id_no = st.text_input("Patient ID")  
 gender = st.selectbox("Gender", ["Male", "Female"])  
-weight = st.number_input("Weight (kg)", min_value=0.0, format="%.2f")  
-age = st.number_input("Age", min_value=0, format="%d")  
+weight = st.number_input("Weight (kg)", min_value=0.0, format="%.1f")  
+age = st.number_input("Age", min_value=0)  
 treatment_date = st.date_input("Treatment Date", datetime.date.today())  # 直接输入日期
-cycle_no = st.number_input("Cycle Number", min_value=1, format="%d")  
-cis_dose = st.number_input("Cisplatin Dose (mg)", min_value=0.0, format="%.2f")  
-carb_dose = st.number_input("Carboplatin Dose (mg)", min_value=0.0, format="%.2f")  
+cycle_no = st.number_input("Cycle Number", min_value=1)  
+cis_dose = st.number_input("Cisplatin Dose (mg)", min_value=0.0, format="%.1f")  
+carb_dose = st.number_input("Carboplatin Dose (mg)", min_value=0.0, format="%.1f")  
 aki_history = st.checkbox("AKI History (Check if Yes)")  
 
 if st.button("Submit"):
