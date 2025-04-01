@@ -9,3 +9,5 @@ lightgbm
 qrcode
 gspread
 datetime
+json
+os
