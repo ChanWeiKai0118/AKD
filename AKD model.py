@@ -12,6 +12,12 @@ df = conn.read()
 # Print results.
 for row in df.itertuples():
     st.write(f"{row.name} has a :{row.pet}:")
+df = conn.read(
+    worksheet="Sheet1",
+    ttl="10m",
+    usecols=[0, 1],
+    nrows=3,
+)
     
 def get_gsheet_client():
     creds = Credentials.from_service_account_info(st.secrets["google_service_account"])
