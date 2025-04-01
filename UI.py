@@ -1,3 +1,4 @@
+import duckdb
 import sys
 sys.path.append('https://raw.githubusercontent.com/ChanWeiKai0118/AKD')
 
