@@ -4,7 +4,8 @@ from google.oauth2.service_account import Credentials
 import gspread
 import datetime
 import os
-
+private_key = st.secrets["google_service_account"]["private_key"]
+st.write(private_key)
 def get_gsheet_client():
     creds = Credentials.from_service_account_info(st.secrets["google_service_account"])
     client = gspread.authorize(creds)
