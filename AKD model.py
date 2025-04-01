@@ -1,14 +1,14 @@
+import json
 import streamlit as st
-import gspread
 from google.oauth2.service_account import Credentials
-import datetime
+import gspread
 
-# 连接 Google Sheets
 def get_gsheet_client():
-    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    creds = Credentials.from_service_account_file("C:/Users/kevin/Desktop/研究資料/研究資料/Kevin research/web tool/token.json", scopes=scope)
+    service_account_info = json.loads(st.secrets["google_service_account"])
+    creds = Credentials.from_service_account_info(service_account_info)
     client = gspread.authorize(creds)
     return client
+
 
 def save_to_gsheet(data):
     client = get_gsheet_client()
