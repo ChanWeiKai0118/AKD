@@ -4,7 +4,22 @@ from google.oauth2.service_account import Credentials
 import gspread
 import datetime
 import os
-    
+
+# 測試 API 連接
+def test_google_sheets():
+    try:
+        creds_dict = json.loads(st.secrets["GOOGLE_SERVICE_ACCOUNT"])
+        creds = Credentials.from_service_account_info(creds_dict)
+        client = gspread.authorize(creds)
+
+        # 取得 Google Sheets
+        sheet = client.open("web data").worksheet("chemo data")
+        print("✅ 成功連接 Google Sheets！")
+    except Exception as e:
+        print("❌ 連接失敗，錯誤訊息：", e)
+
+test_google_sheets()
+
 def get_gsheet_client():
     creds = Credentials.from_service_account_info(st.secrets["google_service_account"])
     client = gspread.authorize(creds)
