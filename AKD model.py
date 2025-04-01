@@ -4,8 +4,14 @@ from google.oauth2.service_account import Credentials
 import gspread
 import datetime
 import os
+st.write(st.secrets["google_service_account"])  # 先打印出来看看
 private_key = st.secrets["google_service_account"]["private_key"]
-st.write(private_key)
+
+# 确保 private_key 格式正确
+if "-----BEGIN PRIVATE KEY-----" in private_key and "-----END PRIVATE KEY-----" in private_key:
+    st.success("private_key 格式正确！")
+else:
+    st.error("private_key 格式错误！请检查 secrets.toml")
 def get_gsheet_client():
     creds = Credentials.from_service_account_info(st.secrets["google_service_account"])
     client = gspread.authorize(creds)
