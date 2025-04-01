@@ -5,12 +5,8 @@ import gspread
 import datetime
 import os
 
-# 获取 service_account_info
-service_account_info = json.loads(os.environ["GOOGLE_SERVICE_ACCOUNT"])  # 从环境变量获取服务帐户信息
-creds = Credentials.from_service_account_info(service_account_info)
-
 def get_gsheet_client():
-    # 使用环境变量中的 service_account_info 来生成 credentials
+    creds = Credentials.from_service_account_info(st.secrets["google_service_account"])
     client = gspread.authorize(creds)
     return client
 
