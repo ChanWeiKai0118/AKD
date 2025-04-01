@@ -1,60 +1,43 @@
-import duckdb
-import sys
-sys.path.append('https://raw.githubusercontent.com/ChanWeiKai0118/AKD')
-
-import gspread
 import streamlit as st
-from google.oauth2.service_account import Credentials
-from streamlit_gsheets.gsheets_connection import GSheetsConnection
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
 
 # 設定 Google Sheets API 權限
-SCOPES = [
-    "https://spreadsheets.google.com/feeds",
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive.file",
-    "https://www.googleapis.com/auth/drive"
-]
+scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+creds = ServiceAccountCredentials.from_json_keyfile_name("your_google_key.json", scope)
+client = gspread.authorize(creds)
 
-# 透過 Streamlit Secrets 讀取 Google 憑證
-CREDENTIALS_JSON = st.secrets["google_service_account"]
+# 連接 Google Sheets
+spreadsheet_url = "https://docs.google.com/spreadsheets/d/1G-o0659UDZQp2_CFEzty8mI0VXXYWzA0rc7v-Uz1ccc/edit?usp=sharing"
+sheet = client.open_by_url(spreadsheet_url).sheet1
 
-# 連線到 Google Sheets
-def connect_to_gsheet(spreadsheet_name, sheet_name):
-    creds = Credentials.from_service_account_info(CREDENTIALS_JSON, scopes=SCOPES)
-    client = gspread.authorize(creds)
-    spreadsheet = client.open(spreadsheet_name)
-    return spreadsheet.worksheet(sheet_name)
+# 讀取資料
+data = sheet.get_all_records()
+df = pd.DataFrame(data)
 
-# 設定 Google Sheets 參數
-SPREADSHEET_NAME = "web data"  # 你的 Google Sheets 名稱
-SHEET_NAME = "chemo data"      # 你的工作表名稱
+st.title("Google Sheets x Streamlit")
 
-# 連結 Google Sheets
-sheet_by_name = connect_to_gsheet(SPREADSHEET_NAME, SHEET_NAME)
-
-st.title("Simple Data Entry using Streamlit")
-
-# 讀取 Google Sheets 的資料
-def read_data():
-    data = sheet_by_name.get_all_records()
-    return pd.DataFrame(data)
-
-# 顯示 Google Sheets 的資料
-df = read_data()
+# 顯示目前資料
+st.write("目前的 Google Sheets 資料：")
 st.dataframe(df)
 
-# 新增資料到 Google Sheets
-def add_data(row):
-    sheet_by_name.append_row(row)
+# 使用者輸入新資料
+st.subheader("新增資料")
+col1, col2 = st.columns(2)
+with col1:
+    new_col1 = st.text_input("欄位 1 (例如: Name)")
+with col2:
+    new_col2 = st.text_input("欄位 2 (例如: Age)")
 
-# 建立 Streamlit 輸入框
-with st.form("data_entry"):
-    col1, col2 = st.columns(2)
-    name = col1.text_input("Enter Name")
-    age = col2.number_input("Enter Age", min_value=1, max_value=120)
+if st.button("新增到 Google Sheets"):
+    if new_col1 and new_col2:
+        sheet.append_row([new_col1, new_col2])  # 追加新資料
+        st.success("資料已新增！請重新整理查看更新。")
+    else:
+        st.warning("請輸入完整資料！")
 
-    submitted = st.form_submit_button("Submit")
-    if submitted:
-        add_data([name, age])
-        st.success("Data added successfully!")
+# 刪除最後一列
+if st.button("刪除最後一列"):
+    sheet.delete_rows(len(df) + 1)  # gspread 的索引從 1 開始
+    st.success("已刪除最後一列！請重新整理查看更新。")
