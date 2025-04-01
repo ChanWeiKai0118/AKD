@@ -10,4 +10,3 @@ qrcode
 gspread
 datetime
 duckdb
-https://github.com/ChanWeiKai0118/AKD
