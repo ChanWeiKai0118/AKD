@@ -8,7 +8,7 @@ import os
 # 測試 API 連接
 def test_google_sheets():
     try:
-        creds_dict = json.loads(st.secrets["GOOGLE_SERVICE_ACCOUNT"])
+        creds_dict = json.loads(st.secrets["google_service_account"])
         creds = Credentials.from_service_account_info(creds_dict)
         client = gspread.authorize(creds)
 
