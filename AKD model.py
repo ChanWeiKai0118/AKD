@@ -3,19 +3,16 @@ import streamlit as st
 from google.oauth2.service_account import Credentials
 import gspread
 import datetime
-st.write(st.secrets["google_service_account"])  # 先打印出来看看
-private_key = st.secrets["google_service_account"]["private_key"]
+import os
 
-# 确保 private_key 格式正确
-if "-----BEGIN PRIVATE KEY-----" in private_key and "-----END PRIVATE KEY-----" in private_key:
-    st.success("private_key 格式正确！")
-else:
-    st.error("private_key 格式错误！请检查 secrets.toml")
+# 获取 service_account_info
+service_account_info = json.loads(os.environ["GOOGLE_SERVICE_ACCOUNT"])  # 从环境变量获取服务帐户信息
+creds = Credentials.from_service_account_info(service_account_info)
+
 def get_gsheet_client():
-    creds = Credentials.from_service_account_info(st.secrets["google_service_account"])
+    # 使用环境变量中的 service_account_info 来生成 credentials
     client = gspread.authorize(creds)
     return client
-
 
 def save_to_gsheet(data):
     client = get_gsheet_client()
