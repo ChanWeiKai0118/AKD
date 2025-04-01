@@ -1,12 +1,9 @@
 import json
 import streamlit as st
 from google.oauth2.service_account import Credentials
-from streamlit_gsheets import GSheetsConnection
 import gspread
 import datetime
 import os
-url = "https://docs.google.com/spreadsheets/d/1G-o0659UDZQp2_CFEzty8mI0VXXYWzA0rc7v-Uz1ccc/edit?gid=0#gid=0"
-conn = st.connection("gsheets", type=GSheetsConnection)
     
 def get_gsheet_client():
     creds = Credentials.from_service_account_info(st.secrets["google_service_account"])
