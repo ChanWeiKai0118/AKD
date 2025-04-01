@@ -5,8 +5,7 @@ import gspread
 import datetime
 
 def get_gsheet_client():
-    service_account_info = json.loads(st.secrets["google_service_account"])
-    creds = Credentials.from_service_account_info(service_account_info)
+    creds = Credentials.from_service_account_info(st.secrets["google_service_account"])
     client = gspread.authorize(creds)
     return client
 
