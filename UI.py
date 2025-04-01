@@ -1,3 +1,6 @@
+import sys
+sys.path.append('https://raw.githubusercontent.com/ChanWeiKai0118/AKD')
+
 import gspread
 import streamlit as st
 from google.oauth2.service_account import Credentials
