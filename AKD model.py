@@ -3,7 +3,7 @@ import streamlit as st
 from google.oauth2.service_account import Credentials
 import gspread
 import datetime
-
+st.write(st.secrets["google_service_account"])
 def get_gsheet_client():
     creds = Credentials.from_service_account_info(st.secrets["google_service_account"])
     client = gspread.authorize(creds)
