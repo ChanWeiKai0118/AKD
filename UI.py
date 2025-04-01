@@ -6,5 +6,5 @@ url = "https://docs.google.com/spreadsheets/d/1G-o0659UDZQp2_CFEzty8mI0VXXYWzA0r
 # Create a connection object.
 conn = st.experimental_connection("gsheets", type=GSheetsConnection)
 
-data = conn.read(spreadsheet=url, usecols[0,1])
+data = conn.read(spreadsheet=url, worksheet)
 st.dataframe(data)
