@@ -1,7 +1,7 @@
 import gspread
 import streamlit as st
 from google.oauth2.service_account import Credentials
-from streamlit_gsheets import GSheetsConnection
+from streamlit_gsheets import gsheets_connection
 import pandas as pd
 
 # 設定 Google Sheets API 權限
