@@ -23,7 +23,7 @@ def save_to_gsheet(data):
     row[5] = data[3]   # F: age
     row[6] = data[4]   # G: treatment_date
     
-    if data[5] != 0:
+    if data[6] != 0:
         row[7] = data[5]  # H: cycle_no
         row[8] = 0        # I: 設為0
     else:
@@ -50,6 +50,7 @@ carb_dose = st.number_input("Carboplatin Dose (mg)", min_value=0.0, format="%.1f
 aki_history = st.checkbox("AKI History (Check if Yes)")  
 
 if st.button("Submit"):
-    data = [id_no, gender, weight, age, str(treatment_date), cycle_no, cis_dose, carb_dose, int(aki_history)]
+    treatment_date_str = treatment_date.strftime("%Y/%m/%d")
+    data = [id_no, gender, weight, age, str(treatment_date_str), cycle_no, cis_dose, carb_dose, int(aki_history)]
     save_to_gsheet(data)
     st.success("✅ Data submitted successfully!")
