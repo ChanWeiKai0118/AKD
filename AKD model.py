@@ -17,7 +17,7 @@ def test_google_sheets():
         print("❌ 連接失敗，錯誤訊息：", e)
 
 
-ef get_gsheet_client():
+def get_gsheet_client():
     try:
         creds_dict = st.secrets["google_service_account"]  # 直接讀取 Secrets
         creds = Credentials.from_service_account_info(creds_dict)  # 建立憑證
