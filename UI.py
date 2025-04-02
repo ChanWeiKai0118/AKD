@@ -22,18 +22,18 @@ def save_to_gsheet(data):
     row[4] = data[1]   # E: gender
     row[3] = data[2]   # D: weight
     row[5] = data[3]   # F: age
-    row[6] = data[4]   # G: treatment_date
+    row[7] = data[4]   # G: treatment_date
     
     if data[6] != 0:
-        row[7] = data[5]  # H: cycle_no
-        row[8] = 0        # I: 設為0
+        row[8] = data[5]  # H: cycle_no
+        row[9] = 0        # I: 設為0
     else:
-        row[7] = 0        # H: 設為0
-        row[8] = data[5]  # I: cycle_no
+        row[8] = 0        # H: 設為0
+        row[9] = data[5]  # I: cycle_no
     
-    row[10] = data[6]  # K: cis_dose
-    row[13] = data[7]  # N: carb_dose
-    row[55] = data[8]  # BD: aki_history
+    row[11] = data[6]  # K: cis_dose
+    row[14] = data[7]  # N: carb_dose
+    row[56] = data[8]  # BD: aki_history
     
     sheet.append_row(row)
 
