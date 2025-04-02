@@ -32,7 +32,7 @@ def save_to_gsheet(data):
 
     row[11] = data[7]  # K: cis_dose
     row[14] = data[8]  # N: carb_dose
-    row[56] = data[9]  # BD: aki_history
+    row[55] = data[9]  # BD: aki_history
     
     sheet.append_row(row)
 
