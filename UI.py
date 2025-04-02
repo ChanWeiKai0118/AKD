@@ -36,10 +36,10 @@ def save_to_gsheet(data):
     row[55] = data[9]  # BD: aki_history
     
     # 在 A 欄插入 id_no 公式
-    row[0] = '=IF(ROW()=2, 1, IF(COUNTIF(B$1:B2, B2) = 0, MAX(A$1:A2) + 1, IF(OR(H2<INDEX(H$1:H2, MAX(IF($B$1:B2=B2, ROW($B$1:B2)-1, 0))), I2<INDEX(I$1:I$2, MAX(IF($B$1:B2=B2, ROW($B$1:B2)-1, 0)))), MAX(A$1:A2) + 1, INDEX(A$1:A2, MAX(IF(B$1:B2=B2, ROW($B$1:B2)-1, 0))))))'
+    row[0] = f'=IF(ROW()=2, 1, IF(COUNTIF(B$1:B2, B2) = 0, MAX(A$1:A2) + 1, IF(OR(H2<INDEX(H$1:H2, MAX(IF($B$1:B2=B2, ROW($B$1:B2)-1, 0))), I2<INDEX(I$1:I$2, MAX(IF($B$1:B2=B2, ROW($B$1:B2)-1, 0)))), MAX(A$1:A2) + 1, INDEX(A$1:A2, MAX(IF(B$1:B2=B2, ROW($B$1:B2)-1, 0))))))'
 
     # 在 J 欄插入 treatment_duration 公式
-    row[9] = '=IF(COUNTIF(A$2:A2, A2) = 1, 0, (F2 - INDEX(F$2:F$2, MATCH(A2, A$2:A2, 0)))/7)'
+    row[9] = f'=IF(COUNTIF(A$2:A2, A2) = 1, 0, (F2 - INDEX(F$2:F$2, MATCH(A2, A$2:A2, 0)))/7)'
 
     # 插入行資料
     sheet.append_row(row)
@@ -48,7 +48,8 @@ def save_to_gsheet(data):
 st.title("Chemotherapy Data Entry")
 
 number = st.text_input("Patient ID")   
-gender = st.selectbox("Gender", ["Male", "Female"])  
+gender = st.selectbox("Gender", ["Male", "Female"])
+gender_value = 1 if gender == "Male" else 0  # 轉換性別數值  
 weight = st.number_input("Weight (kg)", min_value=0.0, format="%.1f")  
 age = st.number_input("Age", min_value=0)  
 treatment_date = st.date_input("Treatment Date", datetime.date.today())  
@@ -61,7 +62,7 @@ if st.button("Submit"):
     treatment_date_str = treatment_date.strftime("%Y/%m/%d")  # 轉換為 YYYY/MM/DD 格式
     excel_date = (treatment_date - datetime.date(1899, 12, 30)).days  # 計算 Excel 日期值
     
-    data = [number, gender, weight, age, treatment_date_str, excel_date, cycle_no, cis_dose, carb_dose, int(aki_history)] 
+    data = [number, gender_value, weight, age, treatment_date_str, excel_date, cycle_no, cis_dose, carb_dose, int(aki_history)] 
     save_to_gsheet(data)
     
     st.success(f"✅ Data submitted successfully!")
