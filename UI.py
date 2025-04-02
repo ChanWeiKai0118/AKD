@@ -21,26 +21,26 @@ def save_to_gsheet(data):
     row[3] = data[1]   # D: gender 
     row[2] = data[2]   # C: weight 
     row[4] = data[3]   # E: age 
-    row[6] = data[4]   # G: treatment_date_str
-    row[5] = data[5]   # F: treatment_date_value
-    
-    if data[7] != 0:
-        row[7] = data[6]  # H,I: cycle_no 
-        row[8] = 0
-    else:
-        row[7] = 0
-        row[8] = data[6]  # H, I: cycle_no 
+    row[5] = data[4]   # F: treatment_date_str
 
-    row[10] = data[7]  # K: cis_dose
-    row[13] = data[8]  # N: carb_dose
-    row[55] = data[9]  # BD: aki_history
+    
+    if data[6] != 0:
+        row[6] = data[5]  # G,H: cycle_no 
+        row[7] = 0
+    else:
+        row[6] = 0
+        row[7] = data[5]  # G,H: cycle_no 
+
+    row[9] = data[6]  # J: cis_dose
+    row[12] = data[7]  # M: carb_dose
+    row[54] = data[8]  # BC: aki_history
 
    last_row = sheet.row_count 
     # 在 A 欄插入 id_no 公式
     row[0] = f'=IF(ROW()=2, 1, IF(COUNTIF(B$1:B{last_row-1}, B{last_row}) = 0, MAX(A$1:A{last_row-1}) + 1, IF(OR(H{last_row}<INDEX(H$1:H{last_row-1}, MAX(IF($B$1:B{last_row-1}=B{last_row}, ROW($B$1:B{last_row-1})-1, 0))), I2<INDEX(I$1:I{last_row-1}, MAX(IF($B$1:B{last_row-1}=B{last_row}, ROW($B$1:B{last_row-1})-1, 0)))), MAX(A$1:A{last_row-1}) + 1, INDEX(A$1:A{last_row-1}, MAX(IF(B$1:B{last_row-1}=B{last_row}, ROW($B$1:B{last_row-1})-1, 0))))))'
 
     # 在 J 欄插入 treatment_duration 公式
-    row[9] = f'=IF(COUNTIF(A$2:A{last_row}, A{last_row}) = 1, 0, (F{last_row} - INDEX(F$2:F{last_row}, MATCH(A{last_row}, A$2:A{last_row}, 0)))/7)'
+    row[8] = f'=IF(COUNTIF(A$2:A{last_row}, A{last_row}) = 1, 0, (F{last_row} - INDEX(F$2:F{last_row}, MATCH(A{last_row}, A$2:A{last_row}, 0)))/7)'
 
     # 插入行資料
     sheet.append_row(row, value_input_option="USER_ENTERED")
@@ -61,9 +61,8 @@ aki_history = st.checkbox("AKI History (Check if Yes)")
 
 if st.button("Submit"):
     treatment_date_str = treatment_date.strftime("%Y/%m/%d")  # 轉換為 YYYY/MM/DD 格式
-    excel_date = (treatment_date - datetime.date(1899, 12, 30)).days  # 計算 Excel 日期值
     
-    data = [number, gender_value, weight, age, treatment_date_str, excel_date, cycle_no, cis_dose, carb_dose, int(aki_history)] 
+    data = [number, gender_value, weight, age, treatment_date_str, cycle_no, cis_dose, carb_dose, int(aki_history)] 
     save_to_gsheet(data)
     
     st.success(f"✅ Data submitted successfully!")
