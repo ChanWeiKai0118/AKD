@@ -22,18 +22,19 @@ def save_to_gsheet(data):
     row[4] = data[1]   # E: gender
     row[3] = data[2]   # D: weight
     row[5] = data[3]   # F: age
-    row[7] = data[4]   # G: treatment_date
+    row[7] = data[5]   # G: treatment_date
+    row[6] = data[4]
     
-    if data[6] != 0:
-        row[8] = data[5]  # H: cycle_no
+    if data[7] != 0:
+        row[8] = data[6]  # H: cycle_no
         row[9] = 0        # I: 設為0
     else:
         row[8] = 0        # H: 設為0
-        row[9] = data[5]  # I: cycle_no
+        row[9] = data[6]  # I: cycle_no
     
-    row[11] = data[6]  # K: cis_dose
-    row[14] = data[7]  # N: carb_dose
-    row[56] = data[8]  # BD: aki_history
+    row[11] = data[7]  # K: cis_dose
+    row[14] = data[8]  # N: carb_dose
+    row[56] = data[9]  # BD: aki_history
     
     sheet.append_row(row)
 
@@ -53,6 +54,7 @@ aki_history = st.checkbox("AKI History (Check if Yes)")
 if st.button("Submit"):
     treatment_date_time = time.strptime(str(treatment_date), "%Y-%m-%d")  # 將日期轉換為 time 物件
     treatment_date_str = time.strftime("%Y/%m/%d", treatment_date_time)  # 格式化日期
-    data = [id_no, gender, weight, age, treatment_date_str, cycle_no, cis_dose, carb_dose, int(aki_history)]
+    excel_date = (treatment_date_str - datetime(1900, 1, 1))
+    data = [id_no, gender, weight, age, excel_date ,treatment_date_str, cycle_no, cis_dose, carb_dose, int(aki_history)]
     save_to_gsheet(data)
     st.success("✅ Data submitted successfully!")
