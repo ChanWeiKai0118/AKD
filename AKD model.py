@@ -4,10 +4,7 @@ from google.oauth2.service_account import Credentials
 import gspread
 import datetime
 import os
-scope = [
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive"
-]
+scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 def test_google_sheets():
     try:
         creds_dict = json.loads(st.secrets["google_service_account"])
@@ -24,7 +21,7 @@ def test_google_sheets():
 def get_gsheet_client():
     try:
         creds_dict = st.secrets["google_service_account"]  # 直接讀取 Secrets
-        creds = Credentials.from_service_account_info(creds_dict)  # 建立憑證
+        creds = Credentials.from_service_account_info(creds_dict, scopes=scope)  # 建立憑證
         client = gspread.authorize(creds)  # 授權 Google Sheets API
         return client
     except Exception as e:
