@@ -5,30 +5,29 @@ import gspread
 import datetime
 import os
 
-# 測試 API 連接
-def test_google_sheets():
-    try:
-        creds_dict = json.loads(st.secrets["google_service_account"])
-        creds = Credentials.from_service_account_info(creds_dict)
-        client = gspread.authorize(creds)
-
-        # 取得 Google Sheets
-        sheet = client.open("web data").worksheet("chemo data")
-        print("✅ 成功連接 Google Sheets！")
-    except Exception as e:
-        print("❌ 連接失敗，錯誤訊息：", e)
-
 
 
 def get_gsheet_client():
-    creds = Credentials.from_service_account_info(st.secrets["google_service_account"])
-    client = gspread.authorize(creds)
-    return client
+    try:
+        creds_dict = json.loads(st.secrets["google_service_account"])  # 讀取 secrets
+        creds = Credentials.from_service_account_info(creds_dict)  # 建立憑證
+        client = gspread.authorize(creds)  # 授權 Google Sheets API
+        return client
+    except Exception as e:
+        st.error(f"❌ 連接 Google Sheets 失敗: {e}")
+        return None
+
 
 def save_to_gsheet(data):
     client = get_gsheet_client()
-    sheet = client.open("web data").worksheet("chemo data")  # 选择 chemo data 这个 Sheet
-    sheet.append_row(data)  # 追加数据到最后一行
+    if client:
+        try:
+            sheet = client.open("web data").worksheet("chemo data")  
+            sheet.append_row(data)  
+            st.success("✅ Data submitted successfully!")
+        except Exception as e:
+            st.error(f"❌ 無法寫入 Google Sheets: {e}")
+
 
 # Streamlit UI
 st.title("Chemotherapy Data Entry")
