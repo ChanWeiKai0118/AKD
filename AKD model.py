@@ -4,39 +4,20 @@ from google.oauth2.service_account import Credentials
 import gspread
 import datetime
 import os
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-def test_google_sheets():
-    try:
-        creds_dict = json.loads(st.secrets["google_service_account"])
-        creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
-        client = gspread.authorize(creds)
-
-        # 取得 Google Sheets
-        sheet = client.open("web data").worksheet("chemo data")
-        print("✅ 成功連接 Google Sheets！")
-    except Exception as e:
-        print("❌ 連接失敗，錯誤訊息：", e)
 
 
 def get_gsheet_client():
-    try:
-        creds_dict = st.secrets["google_service_account"]  # 直接讀取 Secrets
-        creds = Credentials.from_service_account_info(creds_dict, scopes=scope)  # 建立憑證
-        client = gspread.authorize(creds)  # 授權 Google Sheets API
-        return client
-    except Exception as e:
-        st.error(f"❌ 連接 Google Sheets 失敗: {e}")
-        return None
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    creds_dict = st.secrets["google_service_account"]  # 直接讀取 Secrets
+    creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
+    client = gspread.authorize(creds)
+    return client
 
 def save_to_gsheet(data):
     client = get_gsheet_client()
-    if client:
-        try:
-            sheet = client.open("web data").worksheet("chemo data")  
-            sheet.append_row(data)  
-            st.success("✅ Data submitted successfully!")
-        except Exception as e:
-            st.error(f"❌ 無法寫入 Google Sheets: {e}")
+    sheet = client.open("web data").worksheet("chemo data")  # 选择 chemo data 这个 Sheet
+    sheet.append_row(data)  # 追加数据到最后一行
+
 
 
 # Streamlit UI
