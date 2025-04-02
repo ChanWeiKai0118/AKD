@@ -17,16 +17,15 @@ def test_google_sheets():
         print("❌ 連接失敗，錯誤訊息：", e)
 
 
-def get_gsheet_client():
+ef get_gsheet_client():
     try:
-        creds_dict = json.loads(st.secrets["google_service_account"])  # 讀取 secrets
+        creds_dict = st.secrets["google_service_account"]  # 直接讀取 Secrets
         creds = Credentials.from_service_account_info(creds_dict)  # 建立憑證
         client = gspread.authorize(creds)  # 授權 Google Sheets API
         return client
     except Exception as e:
         st.error(f"❌ 連接 Google Sheets 失敗: {e}")
         return None
-
 
 def save_to_gsheet(data):
     client = get_gsheet_client()
