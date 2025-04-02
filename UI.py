@@ -42,7 +42,7 @@ def save_to_gsheet(data):
     row[9] = f'=IF(COUNTIF(A$2:A2, A2) = 1, 0, (F2 - INDEX(F$2:F$2, MATCH(A2, A$2:A2, 0)))/7)'
 
     # 插入行資料
-    sheet.append_row(row)
+    sheet.append_row(row, value_input_option="USER_ENTERED")
 
 # Streamlit UI
 st.title("Chemotherapy Data Entry")
