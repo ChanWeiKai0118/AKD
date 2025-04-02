@@ -17,21 +17,21 @@ def save_to_gsheet(data):
     
     row = ["" for _ in range(56)]  # BD欄是第56欄
     row[1] = data[0]   # B: id_no
-    row[4] = data[1]   # E: gender
-    row[3] = data[2]   # D: weight
-    row[5] = data[3]   # F: age
+    row[3] = data[1]   # E: gender
+    row[2] = data[2]   # D: weight
+    row[4] = data[3]   # F: age
     row[6] = data[4]   # G: treatment_date_str
-    row[7] = data[5]   # H: treatment_date_value
+    row[5] = data[5]   # H: treatment_date_value
     
     if data[7] != 0:
-        row[8] = data[6]  # I: cycle_no
-        row[9] = 0
-    else:
+        row[7] = data[6]  # I: cycle_no
         row[8] = 0
-        row[9] = data[6]  # I: cycle_no
+    else:
+        row[7] = 0
+        row[8] = data[6]  # I: cycle_no
 
-    row[11] = data[7]  # K: cis_dose
-    row[14] = data[8]  # N: carb_dose
+    row[10] = data[7]  # K: cis_dose
+    row[13] = data[8]  # N: carb_dose
     row[55] = data[9]  # BD: aki_history
     
     sheet.append_row(row)
@@ -56,4 +56,4 @@ if st.button("Submit"):
     data = [id_no, gender, weight, age, treatment_date_str, excel_date, cycle_no, cis_dose, carb_dose, int(aki_history)]
     save_to_gsheet(data)
     
-    st.success(f"✅ Data submitted successfully! (Excel Date: {excel_date})")
+    st.success(f"✅ Data submitted successfully!")
