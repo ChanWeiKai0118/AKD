@@ -3,7 +3,6 @@ import streamlit as st
 from google.oauth2.service_account import Credentials
 import gspread
 import datetime
-import time
 
 def get_gsheet_client():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -16,22 +15,21 @@ def save_to_gsheet(data):
     client = get_gsheet_client()
     sheet = client.open("web data").worksheet("chemo data")
     
-    # 設定儲存到指定的欄位
     row = ["" for _ in range(56)]  # BD欄是第56欄
     row[1] = data[0]   # B: id_no
     row[4] = data[1]   # E: gender
     row[3] = data[2]   # D: weight
     row[5] = data[3]   # F: age
-    row[7] = data[5]   # G: treatment_date
-    row[6] = data[4]
+    row[6] = data[4]   # G: treatment_date_str
+    row[7] = data[5]   # H: treatment_date_value
     
     if data[7] != 0:
-        row[8] = data[6]  # H: cycle_no
-        row[9] = 0        # I: 設為0
+        row[8] = data[6]  # I: cycle_no
+        row[9] = 0
     else:
-        row[8] = 0        # H: 設為0
+        row[8] = 0
         row[9] = data[6]  # I: cycle_no
-    
+
     row[11] = data[7]  # K: cis_dose
     row[14] = data[8]  # N: carb_dose
     row[56] = data[9]  # BD: aki_history
@@ -52,9 +50,10 @@ carb_dose = st.number_input("Carboplatin Dose (mg)", min_value=0.0, format="%.1f
 aki_history = st.checkbox("AKI History (Check if Yes)")  
 
 if st.button("Submit"):
-    treatment_date_time = time.strptime(str(treatment_date), "%Y-%m-%d")  # 將日期轉換為 time 物件
-    treatment_date_str = time.strftime("%Y/%m/%d", treatment_date_time)  # 格式化日期
-    excel_date = (treatment_date_str - datetime(1900, 1, 1))
-    data = [id_no, gender, weight, age, excel_date ,treatment_date_str, cycle_no, cis_dose, carb_dose, int(aki_history)]
+    treatment_date_str = treatment_date.strftime("%Y/%m/%d")  # 轉換為 YYYY/MM/DD 格式
+    excel_date = (treatment_date - datetime.date(1899, 12, 30)).days  # 計算 Excel 日期值
+    
+    data = [id_no, gender, weight, age, treatment_date_str, excel_date, cycle_no, cis_dose, carb_dose, int(aki_history)]
     save_to_gsheet(data)
-    st.success("✅ Data submitted successfully!")
+    
+    st.success(f"✅ Data submitted successfully! (Excel Date: {excel_date})")
