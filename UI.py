@@ -51,6 +51,6 @@ aki_history = st.checkbox("AKI History (Check if Yes)")
 
 if st.button("Submit"):
     treatment_date_str = treatment_date.strftime("%Y/%m/%d")
-    data = [id_no, gender, weight, age, str(treatment_date_str), cycle_no, cis_dose, carb_dose, int(aki_history)]
+    data = [id_no, gender, weight, age, treatment_date_str, cycle_no, cis_dose, carb_dose, int(aki_history)]
     save_to_gsheet(data)
     st.success("✅ Data submitted successfully!")
