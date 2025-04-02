@@ -52,7 +52,7 @@ aki_history = st.checkbox("AKI History (Check if Yes)")
 
 if st.button("Submit"):
     treatment_date_time = time.strptime(str(treatment_date), "%Y-%m-%d")  # 將日期轉換為 time 物件
-    treatment_date_str = time.strftime("%Y/%m/%d", treatment_date_time)  # 格式化日期
-    data = [id_no, gender, weight, age, treatment_date_str, cycle_no, cis_dose, carb_dose, int(aki_history)]
+    
+    data = [id_no, gender, weight, age, treatment_date_time, cycle_no, cis_dose, carb_dose, int(aki_history)]
     save_to_gsheet(data)
     st.success("✅ Data submitted successfully!")
