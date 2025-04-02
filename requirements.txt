@@ -9,4 +9,4 @@ lightgbm
 qrcode
 gspread
 datetime
-duckdb
+time
