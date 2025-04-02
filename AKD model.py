@@ -35,7 +35,6 @@ carb_dose = st.number_input("Carboplatin Dose (mg)", min_value=0.0, format="%.1f
 aki_history = st.checkbox("AKI History (Check if Yes)")  
 
 if st.button("Submit"):
-    test_google_sheets()
     data = [id_no, gender, weight, age, str(treatment_date), cycle_no, cis_dose, carb_dose, int(aki_history)]
     save_to_gsheet(data)
     st.success("✅ Data submitted successfully!")
