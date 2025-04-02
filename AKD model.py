@@ -4,14 +4,14 @@ from google.oauth2.service_account import Credentials
 import gspread
 import datetime
 import os
-SCOPES = [
+scope = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive"
 ]
 def test_google_sheets():
     try:
         creds_dict = json.loads(st.secrets["google_service_account"])
-        creds = Credentials.from_service_account_info(creds_dict)
+        creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
         client = gspread.authorize(creds)
 
         # 取得 Google Sheets
