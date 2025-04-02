@@ -3,6 +3,7 @@ import streamlit as st
 from google.oauth2.service_account import Credentials
 import gspread
 import datetime
+import time
 
 def get_gsheet_client():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
