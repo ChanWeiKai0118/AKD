@@ -35,7 +35,7 @@ def save_to_gsheet(data):
     row[12] = data[7]  # M: carb_dose
     row[54] = data[8]  # BC: aki_history
 
-   last_row = sheet.row_count 
+    last_row = sheet.row_count 
     # 在 A 欄插入 id_no 公式
     row[0] = f'=IF(ROW()=2, 1, IF(COUNTIF(B$1:B{last_row-1}, B{last_row}) = 0, MAX(A$1:A{last_row-1}) + 1, IF(OR(H{last_row}<INDEX(H$1:H{last_row-1}, MAX(IF($B$1:B{last_row-1}=B{last_row}, ROW($B$1:B{last_row-1})-1, 0))), I2<INDEX(I$1:I{last_row-1}, MAX(IF($B$1:B{last_row-1}=B{last_row}, ROW($B$1:B{last_row-1})-1, 0)))), MAX(A$1:A{last_row-1}) + 1, INDEX(A$1:A{last_row-1}, MAX(IF(B$1:B{last_row-1}=B{last_row}, ROW($B$1:B{last_row-1})-1, 0))))))'
 
