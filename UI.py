@@ -14,43 +14,41 @@ def get_gsheet_client():
 def save_to_gsheet(data):
     client = get_gsheet_client()
     sheet = client.open("web data").worksheet("chemo data")
-
+    
+    # 設定一個新的行列表
     row = ["" for _ in range(56)]  # BD欄是第55欄 
-
-    # A欄 (id_no)：使用 Excel 公式
-    last_row = len(sheet.get_all_values()) + 1  # 獲取當前行數
-    if last_row == 2:  # 第一筆資料 (Excel 第一行是標題，第二行開始為資料)
-        row[0] = 1  # 第一筆 id_no 設為 1
-    else:
-        row[0] = f'=IF(OR(B{last_row}<>B{last_row-1},H{last_row-1}<H{last_row-2}, I{last_row-1}<I{last_row-2}, AND(H{last_row-1}>0, I{last_row-1}>0)), A{last_row-1}+1, A{last_row-1})'
-
-    # 其他欄位
-    row[1] = data[0]  # B: number
-    row[3] = data[1]  # D: gender (已轉換為 1/0)
-    row[2] = data[2]  # C: weight
-    row[4] = data[3]  # E: age
-    row[6] = data[4]  # G: treatment_date_str
-    row[5] = data[5]  # F: treatment_date_value
+    row[1] = data[0]   # B: number 
+    row[3] = data[1]   # D: gender 
+    row[2] = data[2]   # C: weight 
+    row[4] = data[3]   # E: age 
+    row[6] = data[4]   # G: treatment_date_str
+    row[5] = data[5]   # F: treatment_date_value
     
     if data[7] != 0:
-        row[7] = data[6]  # H: cycle_no
+        row[7] = data[6]  # H,I: cycle_no 
         row[8] = 0
     else:
         row[7] = 0
-        row[8] = data[6]  # I: cycle_no 
+        row[8] = data[6]  # H, I: cycle_no 
 
     row[10] = data[7]  # K: cis_dose
     row[13] = data[8]  # N: carb_dose
     row[55] = data[9]  # BD: aki_history
     
-    sheet.append_row(row, value_input_option="USER_ENTERED")  # 允許輸入 Excel 公式
+    # 在 A 欄插入 id_no 公式
+    row[0] = '=IF(ROW()=2, 1, IF(COUNTIF(B$1:B2, B2) = 0, MAX(A$1:A2) + 1, IF(OR(H2<INDEX(H$1:H2, MAX(IF($B$1:B2=B2, ROW($B$1:B2)-1, 0))), I2<INDEX(I$1:I$2, MAX(IF($B$1:B2=B2, ROW($B$1:B2)-1, 0)))), MAX(A$1:A2) + 1, INDEX(A$1:A2, MAX(IF(B$1:B2=B2, ROW($B$1:B2)-1, 0))))))'
+
+    # 在 J 欄插入 treatment_duration 公式
+    row[9] = '=IF(COUNTIF(A$2:A2, A2) = 1, 0, (F2 - INDEX(F$2:F$2, MATCH(A2, A$2:A2, 0)))/7)'
+
+    # 插入行資料
+    sheet.append_row(row)
 
 # Streamlit UI
 st.title("Chemotherapy Data Entry")
 
 number = st.text_input("Patient ID")   
 gender = st.selectbox("Gender", ["Male", "Female"])  
-gender_value = 1 if gender == "Male" else 0  # 轉換性別數值
 weight = st.number_input("Weight (kg)", min_value=0.0, format="%.1f")  
 age = st.number_input("Age", min_value=0)  
 treatment_date = st.date_input("Treatment Date", datetime.date.today())  
@@ -63,7 +61,7 @@ if st.button("Submit"):
     treatment_date_str = treatment_date.strftime("%Y/%m/%d")  # 轉換為 YYYY/MM/DD 格式
     excel_date = (treatment_date - datetime.date(1899, 12, 30)).days  # 計算 Excel 日期值
     
-    data = [number, gender_value, weight, age, treatment_date_str, excel_date, cycle_no, cis_dose, carb_dose, int(aki_history)] 
+    data = [number, gender, weight, age, treatment_date_str, excel_date, cycle_no, cis_dose, carb_dose, int(aki_history)] 
     save_to_gsheet(data)
     
     st.success(f"✅ Data submitted successfully!")
