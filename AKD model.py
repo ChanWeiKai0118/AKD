@@ -4,6 +4,10 @@ from google.oauth2.service_account import Credentials
 import gspread
 import datetime
 import os
+SCOPES = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
+]
 def test_google_sheets():
     try:
         creds_dict = json.loads(st.secrets["google_service_account"])
