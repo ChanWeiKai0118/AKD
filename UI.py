@@ -50,6 +50,8 @@ carb_dose = st.number_input("Carboplatin Dose (mg)", min_value=0.0, format="%.1f
 aki_history = st.checkbox("AKI History (Check if Yes)")  
 
 if st.button("Submit"):
-    data = [id_no, gender, weight, age, str(treatment_date), cycle_no, cis_dose, carb_dose, int(aki_history)]
+    treatment_date_time = time.strptime(str(treatment_date), "%Y-%m-%d")  # 將日期轉換為 time 物件
+    treatment_date_str = time.strftime("%Y/%m/%d", treatment_date_time)  # 格式化日期
+    data = [id_no, gender, weight, age, treatment_date_str, cycle_no, cis_dose, carb_dose, int(aki_history)]
     save_to_gsheet(data)
     st.success("✅ Data submitted successfully!")
