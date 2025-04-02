@@ -16,7 +16,7 @@ def save_to_gsheet(data):
     sheet = client.open("web data").worksheet("chemo data")
     
     # 設定一個新的行列表
-    row = ["" for _ in range(56)]  # BD欄是第55欄 
+    row = ["" for _ in range(57)]  # BC欄是第54欄 
     row[1] = data[0]   # B: number 
     row[3] = data[1]   # D: gender 
     row[2] = data[2]   # C: weight 
