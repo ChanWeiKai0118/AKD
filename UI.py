@@ -11,10 +11,10 @@ def get_gsheet_client():
     client = gspread.authorize(creds)
     return client
 
-def save_to_gsheet(data):
+def save_to_gsheet(data, sheet_name):
     client = get_gsheet_client()
-    sheet = client.open("web data").worksheet("chemo data")
     if sheet_name == "chemo data":
+        sheet = client.open("web data").worksheet("chemo data")
         row = ["" for _ in range(57)]  
         row[1], row[3], row[2], row[4], row[5] = data[0], data[1], data[2], data[3], data[4]
     
@@ -37,7 +37,8 @@ def save_to_gsheet(data):
         row[14] = f'=IF(OR(H{last_row}=0, N{last_row}=0), 0, N{last_row} / H{last_row})'
     
         sheet.append_row(row, value_input_option="USER_ENTERED")
-     else if sheet_name == "lab data":
+     elif sheet_name == "lab data":
+        sheet = client.open("web data").worksheet("lab data")
         row = ["" for _ in range(14)]  
         row[0], row[3], row[4] = data[0], data[1], data[2]
 
@@ -68,7 +69,7 @@ if st.button("Predict"):
     treatment_date_str = treatment_date.strftime("%Y/%m/%d")
 
     data = [number, gender_value, weight, age, treatment_date_str, cycle_no, cis_dose, carb_dose, int(aki_history)]
-    save_to_gsheet(data)
+    save_to_gsheet(data, "chemo data")
 
     st.success("✅ Data submitted successfully!")
 
