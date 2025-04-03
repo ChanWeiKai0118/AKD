@@ -37,12 +37,12 @@ def save_to_gsheet(data, sheet_name):
         row[14] = f'=IF(OR(H{last_row}=0, N{last_row}=0), 0, N{last_row} / H{last_row})'
     
         sheet.append_row(row, value_input_option="USER_ENTERED")
-     if sheet_name == "lab data":
-         sheet = client.open("web data").worksheet("lab data")
-         row = ["" for _ in range(14)]  
-         row[0], row[3], row[4] = data[0], data[1], data[2]
-         row[6], row[7], row[11], row[12], row[13] = data[3], data[4], data[5], data[6], data[7]
-         sheet.append_row(row, value_input_option="USER_ENTERED")
+    if sheet_name == "lab data":
+        sheet = client.open("web data").worksheet("lab data")
+        row = ["" for _ in range(14)]  
+        row[0], row[3], row[4] = data[0], data[1], data[2]
+        row[6], row[7], row[11], row[12], row[13] = data[3], data[4], data[5], data[6], data[7]
+        sheet.append_row(row, value_input_option="USER_ENTERED")
 
 # --- Streamlit UI ---
 st.title("Chemotherapy Data Entry")
