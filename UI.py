@@ -53,6 +53,8 @@ def save_to_gsheet(data, sheet_name):
 
         # I 列: 如果 H (Scr) 為空則為空，否則 F / H
         row[8] = f'=IF(OR(H{last_row}="", F{last_row}=""), "", F{last_row} / H{last_row})'
+        # J 列: eGFR 计算
+        row[9] = f'=IF(B{last_row}=0, IF(H{last_row}<=0.7, 141*((H{last_row}/0.7)^-0.329)*0.993^C{last_row}*1.018, 141*((H{last_row}/0.7)^-1.209)*0.993^H{last_row}*1.018), IF(H{last_row}<=0.9, 141*((H{last_row}/0.9)^-0.411)*0.993^C{last_row}, 141*((H{last_row}/0.9)^-1.209)*0.993^C{last_row}))'
 
         sheet.append_row(row, value_input_option="USER_ENTERED")
 
