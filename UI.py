@@ -41,6 +41,7 @@ def save_to_gsheet(data, sheet_name):
 
     elif sheet_name == "lab data":
         sheet = client.open("web data").worksheet("lab data")
+        last_row = len(sheet.get_all_values()) + 1
         row = ["" for _ in range(14)]  
         
         row[0], row[3], row[4] = data[0], data[1], data[2]
