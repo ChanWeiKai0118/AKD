@@ -52,7 +52,7 @@ def save_to_gsheet(data, sheet_name):
         row[5] = f'=IF(G{last_row}<>"", G{last_row}, IF(ROW()=2, "", IFERROR(INDEX(G$2:G{last_row-1}, MAX(IF(A$2:A{last_row-1}=A{last_row}, ROW(A$2:A{last_row-1})-1, 0))), "")))'
 
         # I 列: 如果 H (Scr) 為空則為空，否則 F / H
-        row[8] = f'=IF(H{last_row}="", "", F{last_row} / H{last_row})'
+        row[8] = f'=IF(OR(H{last_row}="", F{last_row}=""), "", F{last_row} / H{last_row})'
 
         sheet.append_row(row, value_input_option="USER_ENTERED")
 
