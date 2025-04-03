@@ -41,39 +41,12 @@ def save_to_gsheet(data, sheet_name):
 
     elif sheet_name == "lab data":
         sheet = client.open("web data").worksheet("lab data")
-        chemo_sheet = client.open("web data").worksheet("chemo data")
-
-        # 取得 chemo data 所有資料
-        chemo_data = chemo_sheet.get_all_values()
-
-        # 取得欄位標題
-        headers = chemo_data[0]
-        data_rows = chemo_data[1:]  # 去掉標題列
-
-        # 轉換為字典格式 (key 為 Number, value 為該病人的所有 row)
-        chemo_dict = {}
-        for row in data_rows:
-            patient_number = row[1]  # chemo data 的 B 欄 (病人編號)
-            if patient_number not in chemo_dict:
-                chemo_dict[patient_number] = []
-            chemo_dict[patient_number].append(row)
-
-        # 確保資料按日期排序 (取最新)
-        for key in chemo_dict:
-            chemo_dict[key].sort(key=lambda x: x[4], reverse=True)  # 第 4 欄為 Treatment Date
-
-        # 找到對應的最新資料
-        patient_id = data[0]  # lab data A 欄 (病人編號)
-        latest_chemo_row = chemo_dict.get(patient_id, [None])[-1]  # 取最新的一筆
-
-        # 設定 B 欄 (性別) 和 C 欄 (體重)
-        gender = latest_chemo_row[3] if latest_chemo_row else ""  # D 欄 (性別)
-        weight = latest_chemo_row[2] if latest_chemo_row else ""  # C 欄 (體重)
-
         row = ["" for _ in range(14)]  
-        row[0], row[1], row[2], row[3], row[4] = data[0], gender, weight, data[1], data[2]
+        
+        row[0], row[3], row[4] = data[0], data[1], data[2]
         row[6], row[7], row[11], row[12], row[13] = data[3], data[4], data[5], data[6], data[7]
-
+        row[1] = f'=IFERROR(VLOOKUP(A{last_row}, INDIRECT("chemo data!B:D"), 3, FALSE), "")'  # 查找性别
+        row[2] = f'=IFERROR(VLOOKUP(A{last_row}, INDIRECT("chemo data!B:C"), 2, FALSE), "")'  # 查找体重
         sheet.append_row(row, value_input_option="USER_ENTERED")
 
 
