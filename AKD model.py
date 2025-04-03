@@ -11,32 +11,38 @@ def get_gsheet_client():
     client = gspread.authorize(creds)
     return client
 
-def save_to_gsheet(data):
+def save_to_gsheet(data, sheet_name):
     client = get_gsheet_client()
-    sheet = client.open("web data").worksheet("chemo data")
+    if sheet_name == "chemo data":
+        sheet = client.open("web data").worksheet("chemo data")
+        row = ["" for _ in range(57)]  
+        row[1], row[3], row[2], row[4], row[5] = data[0], data[1], data[2], data[3], data[4]
     
-    row = ["" for _ in range(57)]  
-    row[1], row[3], row[2], row[4], row[5] = data[0], data[1], data[2], data[3], data[4]
-
-    if data[6] != 0:
-        row[6], row[7] = data[5], 0
-    else:
-        row[6], row[7] = 0, data[5]
-
-    row[9], row[12], row[54] = data[6], data[7], data[8]
-
-    last_row = len(sheet.get_all_values()) + 1
-
-    row[0] = f'=IF(ROW()=2, 1, IF(COUNTIF(B$2:B{last_row-1}, B{last_row}) = 0, MAX(A$2:A{last_row-1}) + 1, IF(OR(H{last_row}<INDEX(H$2:H{last_row-1}, MAX(IF($B$2:B{last_row-1}=B{last_row}, ROW($B$2:B{last_row-1})-1, 0))),G{last_row}<INDEX(G$2:G{last_row-1}, MAX(IF($B$2:B{last_row-1}=B{last_row}, ROW($B$2:B{last_row-1})-1, 0))),F{last_row} - INDEX(F$2:F{last_row-1}, MAX(IF($B$2:B{last_row-1} = B{last_row}, ROW($B$2:B{last_row-1}) - 1, 0))) > 42), MAX(A$2:A{last_row-1}) + 1, INDEX(A$2:A{last_row-1}, MAX(IF(B$2:B{last_row-1}=B{last_row}, ROW($B$2:B{last_row-1})-1, 0))))))'
-
-    row[8] = f'=IF(COUNTIF(A$2:A{last_row}, A{last_row}) = 1, 0, (F{last_row} - INDEX(F$2:F{last_row}, MATCH(A{last_row}, A$2:A{last_row}, 0)))/7)'
-
-    row[10] = f'=SUMIF(A$2:A{last_row}, A{last_row}, J$2:J{last_row})'
-    row[11] = f'=IF(OR(G{last_row}=0, K{last_row}=0), 0, K{last_row} / G{last_row})'
-    row[13] = f'=SUMIF(A$2:A{last_row}, A{last_row}, M$2:M{last_row})'
-    row[14] = f'=IF(OR(H{last_row}=0, N{last_row}=0), 0, N{last_row} / H{last_row})'
-
-    sheet.append_row(row, value_input_option="USER_ENTERED")
+        if data[6] != 0:
+            row[6], row[7] = data[5], 0
+        else:
+            row[6], row[7] = 0, data[5]
+    
+        row[9], row[12], row[54] = data[6], data[7], data[8]
+    
+        last_row = len(sheet.get_all_values()) + 1
+    
+        row[0] = f'=IF(ROW()=2, 1, IF(COUNTIF(B$2:B{last_row-1}, B{last_row}) = 0, MAX(A$2:A{last_row-1}) + 1, IF(OR(H{last_row}<INDEX(H$2:H{last_row-1}, MAX(IF($B$2:B{last_row-1}=B{last_row}, ROW($B$2:B{last_row-1})-1, 0))),G{last_row}<INDEX(G$2:G{last_row-1}, MAX(IF($B$2:B{last_row-1}=B{last_row}, ROW($B$2:B{last_row-1})-1, 0))),F{last_row} - INDEX(F$2:F{last_row-1}, MAX(IF($B$2:B{last_row-1} = B{last_row}, ROW($B$2:B{last_row-1}) - 1, 0))) > 42), MAX(A$2:A{last_row-1}) + 1, INDEX(A$2:A{last_row-1}, MAX(IF(B$2:B{last_row-1}=B{last_row}, ROW($B$2:B{last_row-1})-1, 0))))))'
+    
+        row[8] = f'=IF(COUNTIF(A$2:A{last_row}, A{last_row}) = 1, 0, (F{last_row} - INDEX(F$2:F{last_row}, MATCH(A{last_row}, A$2:A{last_row}, 0)))/7)'
+    
+        row[10] = f'=SUMIF(A$2:A{last_row}, A{last_row}, J$2:J{last_row})'
+        row[11] = f'=IF(OR(G{last_row}=0, K{last_row}=0), 0, K{last_row} / G{last_row})'
+        row[13] = f'=SUMIF(A$2:A{last_row}, A{last_row}, M$2:M{last_row})'
+        row[14] = f'=IF(OR(H{last_row}=0, N{last_row}=0), 0, N{last_row} / H{last_row})'
+    
+        sheet.append_row(row, value_input_option="USER_ENTERED")
+    if sheet_name == "lab data":
+        sheet = client.open("web data").worksheet("lab data")
+        row = ["" for _ in range(14)]  
+        row[0], row[3], row[4] = data[0], data[1], data[2]
+        row[6], row[7], row[11], row[12], row[13] = data[3], data[4], data[5], data[6], data[7]
+        sheet.append_row(row, value_input_option="USER_ENTERED")
 
 # --- Streamlit UI ---
 st.title("Chemotherapy Data Entry")
@@ -62,9 +68,32 @@ if st.button("Predict"):
     treatment_date_str = treatment_date.strftime("%Y/%m/%d")
 
     data = [number, gender_value, weight, age, treatment_date_str, cycle_no, cis_dose, carb_dose, int(aki_history)]
-    save_to_gsheet(data)
+    save_to_gsheet(data, "chemo data")
 
     st.success("✅ Data submitted successfully!")
 
 st.subheader("Predicted Risk:")
 st.write("📊 (模型預測結果顯示區域，未來可填入模型輸出)")
+
+# --- 第二個 UI (檢驗數據) ---
+st.title("Laboratory Data Entry")
+
+col3, col4 = st.columns(2)
+
+with col3:
+    lab_number = st.text_input("Patient ID (Lab Data)")
+    weight_lab = st.number_input("Weight (kg) - Lab", min_value=0.0, format="%.1f")
+    lab_date = st.date_input("Date", datetime.date.today())
+
+with col4:
+    bun = st.number_input("BUN", min_value=0.0, value=None)
+    scr = st.number_input("Scr", min_value=0.00, format="%.2f", value=None)
+    hgb = st.number_input("Hgb", min_value=0.0, format="%.1f", value=None)
+    sodium = st.number_input("Sodium (N)", min_value=0, value=None)
+    potassium = st.number_input("Potassium (K)", min_value=0, value=None)
+
+if st.button("Submit Lab Data"):
+    lab_date_str = lab_date.strftime("%Y/%m/%d")
+    lab_data = [lab_number, weight_lab, lab_date_str, bun or "", scr or "", hgb or "", sodium or "", potassium or ""]
+    save_to_gsheet(lab_data, "lab data")
+    st.success("✅ Laboratory data submitted successfully!")
