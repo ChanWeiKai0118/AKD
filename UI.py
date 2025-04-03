@@ -29,13 +29,22 @@ def save_to_gsheet(data):
     if empty_row_index is None:
         empty_row_index = len(values) + 1
 
-    # 設定要填入的資料
-    row_data = ["" for _ in range(57)]  # 預留 57 個欄位
-    row_data[1] = data[0]   # B: number
-    row_data[3] = data[1]   # D: gender
-    row_data[2] = data[2]   # C: weight
-    row_data[4] = data[3]   # E: age
-    row_data[5] = data[4]   # F: treatment_date_str
+    # 讀取該行的原始數據，避免覆蓋原有值
+    try:
+        existing_row = sheet.row_values(empty_row_index)
+    except:
+        existing_row = [""] * 57  # 避免讀取錯誤，給定預設空值
+
+    # 確保 existing_row 長度足夠（Google Sheets 讀取行時可能會回傳較短的陣列）
+    existing_row += [""] * (57 - len(existing_row))
+
+    # 只更新有填入數據的欄位
+    row_data = existing_row.copy()
+    if data[0]: row_data[1] = data[0]   # B: number
+    if data[1]: row_data[3] = data[1]   # D: gender
+    if data[2]: row_data[2] = data[2]   # C: weight
+    if data[3]: row_data[4] = data[3]   # E: age
+    if data[4]: row_data[5] = data[4]   # F: treatment_date_str
 
     if data[6] != 0:
         row_data[6] = data[5]  # G: cycle_no
@@ -44,11 +53,11 @@ def save_to_gsheet(data):
         row_data[6] = 0        # G: 空值
         row_data[7] = data[5]  # H: cycle_no
 
-    row_data[9] = data[6]   # J: cis_dose
-    row_data[12] = data[7]  # M: carb_dose
-    row_data[54] = data[8]  # BC: aki_history
+    if data[6]: row_data[9] = data[6]   # J: cis_dose
+    if data[7]: row_data[12] = data[7]  # M: carb_dose
+    if data[8]: row_data[54] = data[8]  # BC: aki_history
 
-    # 更新 Google 試算表的特定行
+    # 更新 Google 試算表的特定行（但保留未變更的欄位）
     sheet.update(f"A{empty_row_index}:BE{empty_row_index}", [row_data], value_input_option="USER_ENTERED")
 
 
