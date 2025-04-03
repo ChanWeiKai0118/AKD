@@ -14,52 +14,36 @@ def get_gsheet_client():
 def save_to_gsheet(data):
     client = get_gsheet_client()
     sheet = client.open("web data").worksheet("chemo data")
+    
+    # 設定一個新的行列表
+    row = ["" for _ in range(57)]  # BC欄是第54欄 
+    row[1] = data[0]   # B: number 
+    row[3] = data[1]   # D: gender 
+    row[2] = data[2]   # C: weight 
+    row[4] = data[3]   # E: age 
+    row[5] = data[4]   # F: treatment_date_str
 
-    # 讀取整張試算表的內容
-    values = sheet.get_all_values()
-
-    # 找到第一個可以填入的 row
-    empty_row_index = None
-    for i, row in enumerate(values, start=1):  # start=1 讓索引與試算表行數對齊
-        if all(row[x] == "" for x in [1, 2, 3, 4, 5, 6, 7, 9, 12, 54]):  # 檢查要填的欄位是否為空
-            empty_row_index = i
-            break
-
-    # 如果找不到空白行，就加到最後一行
-    if empty_row_index is None:
-        empty_row_index = len(values) + 1
-
-    # 讀取該行的原始數據，避免覆蓋原有值
-    try:
-        existing_row = sheet.row_values(empty_row_index)
-    except:
-        existing_row = [""] * 57  # 避免讀取錯誤，給定預設空值
-
-    # 確保 existing_row 長度足夠（Google Sheets 讀取行時可能會回傳較短的陣列）
-    existing_row += [""] * (57 - len(existing_row))
-
-    # 只更新有填入數據的欄位
-    row_data = existing_row.copy()
-    if data[0]: row_data[1] = data[0]   # B: number
-    if data[1]: row_data[3] = data[1]   # D: gender
-    if data[2]: row_data[2] = data[2]   # C: weight
-    if data[3]: row_data[4] = data[3]   # E: age
-    if data[4]: row_data[5] = data[4]   # F: treatment_date_str
-
+    
     if data[6] != 0:
-        row_data[6] = data[5]  # G: cycle_no
-        row_data[7] = 0        # H: 空值
+        row[6] = data[5]  # G,H: cycle_no 
+        row[7] = 0
     else:
-        row_data[6] = 0        # G: 空值
-        row_data[7] = data[5]  # H: cycle_no
+        row[6] = 0
+        row[7] = data[5]  # G,H: cycle_no 
 
-    if data[6]: row_data[9] = data[6]   # J: cis_dose
-    if data[7]: row_data[12] = data[7]  # M: carb_dose
-    if data[8]: row_data[54] = data[8]  # BC: aki_history
+    row[9] = data[6]  # J: cis_dose
+    row[12] = data[7]  # M: carb_dose
+    row[54] = data[8]  # BC: aki_history
 
-    # 更新 Google 試算表的特定行（但保留未變更的欄位）
-    sheet.update(f"A{empty_row_index}:BE{empty_row_index}", [row_data], value_input_option="USER_ENTERED")
+    last_row = len(sheet.get_all_values()) + 1
+    # 在 A 欄插入 id_no 公式
+    row[0] = f'=IF(ROW()=2, 1, IF(COUNTIF(B$2:B{last_row-1}, B{last_row}) = 0, MAX(A$2:A{last_row-1}) + 1,IF(OR(H{last_row}<INDEX(H$2:H{last_row-1}, MAX(IF($B$2:B{last_row-1}=B{last_row}, ROW($B$2:B{last_row-1})-1, 0))),I2<INDEX(I$2:I{last_row-1}, MAX(IF($B$2:B{last_row-1}=B{last_row}, ROW($B$2:B{last_row-1})-1, 0)))), MAX(A$2:A{last_row-1}) + 1, INDEX(A$2:A{last_row-1}, MAX(IF(B$2:B{last_row-1}=B{last_row}, ROW($B$2:B{last_row-1})-1, 0))))))'
 
+    # 在 J 欄插入 treatment_duration 公式
+    row[8] = f'=IF(COUNTIF(A$2:A{last_row}, A{last_row}) = 1, 0, (F{last_row} - INDEX(F$2:F{last_row}, MATCH(A{last_row}, A$2:A{last_row}, 0)))/7)'
+
+    # 插入行資料
+    sheet.append_row(row, value_input_option="USER_ENTERED")
 
 # Streamlit UI
 st.title("Chemotherapy Data Entry")
