@@ -85,11 +85,11 @@ with col3:
     lab_date = st.date_input("Date", datetime.date.today())
 
 with col4:
-    bun = st.number_input("BUN", min_value=0.0, format="%.1f", value=None)
-    scr = st.number_input("Scr", min_value=0.0, format="%.2f", value=None)
+    bun = st.number_input("BUN", min_value=0.0, value=None)
+    scr = st.number_input("Scr", min_value=0.00, format="%.2f", value=None)
     hgb = st.number_input("Hgb", min_value=0.0, format="%.1f", value=None)
-    sodium = st.number_input("Sodium (N)", min_value=0.0, format="%.1f", value=None)
-    potassium = st.number_input("Potassium (K)", min_value=0.0, format="%.1f", value=None)
+    sodium = st.number_input("Sodium (N)", min_value=0, value=None)
+    potassium = st.number_input("Potassium (K)", min_value=0, value=None)
 
 if st.button("Submit Lab Data"):
     lab_date_str = lab_date.strftime("%Y/%m/%d")
