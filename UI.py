@@ -41,6 +41,18 @@ def save_to_gsheet(data):
 
     # 在 J 欄插入 treatment_duration 公式
     row[8] = f'=IF(COUNTIF(A$2:A{last_row}, A{last_row}) = 1, 0, (F{last_row} - INDEX(F$2:F{last_row}, MATCH(A{last_row}, A$2:A{last_row}, 0)))/7)'
+    
+    # K 欄: 累積 Cisplatin 劑量
+    row[10] = f'=SUMIF(A$2:A{last_row}, A{last_row}, J$2:J{last_row})'
+    
+    # L 欄: K 欄值 / G 欄值
+    row[11] = f'=IF(G{last_row}=0, "", K{last_row} / G{last_row})'
+    
+    # N 欄: 累積 Carboplatin 劑量
+    row[13] = f'=SUMIF(A$2:A{last_row}, A{last_row}, M$2:M{last_row})'
+    
+    # O 欄: N 欄值 / H 欄值
+    row[14] = f'=IF(H{last_row}=0, "", N{last_row} / H{last_row})'
 
     # 插入行資料
     sheet.append_row(row, value_input_option="USER_ENTERED")
