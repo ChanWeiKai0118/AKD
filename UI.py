@@ -47,7 +47,7 @@ def save_to_gsheet(data, sheet_name):
         row[0], row[3], row[4] = data[0], data[1], data[2]
         row[6], row[7], row[11], row[12], row[13] = data[3], data[4], data[5], data[6], data[7]
         row[1] = f'=IFERROR(VLOOKUP(A{last_row}, INDIRECT("chemo data!B:D"), 3, FALSE), "")'  # 查找性别
-        row[2] = f'=IFERROR(VLOOKUP(A{last_row}, INDIRECT("chemo data!B:E"), 2, FALSE), "")'  # 查找体重
+        row[2] = f'=IFERROR(VLOOKUP(A{last_row}, INDIRECT("chemo data!B:E"), 4, FALSE), "")'  # 查找年紀
         # F 列: 如果 G (BUN) 有值，則填入 G，否則找最近的 BUN
         row[5] = f'=IF(G{last_row}<>"", G{last_row}, IF(ROW()=2, "", IFERROR(INDEX(G$2:G{last_row-1}, MAX(IF(A$2:A{last_row-1}=A{last_row}, ROW(A$2:A{last_row-1})-1, 0))), "")))'
 
