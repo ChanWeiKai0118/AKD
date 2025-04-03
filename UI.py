@@ -15,66 +15,56 @@ def save_to_gsheet(data):
     client = get_gsheet_client()
     sheet = client.open("web data").worksheet("chemo data")
     
-    # 設定一個新的行列表
-    row = ["" for _ in range(57)]  # BC欄是第54欄 
-    row[1] = data[0]   # B: number 
-    row[3] = data[1]   # D: gender 
-    row[2] = data[2]   # C: weight 
-    row[4] = data[3]   # E: age 
-    row[5] = data[4]   # F: treatment_date_str
+    row = ["" for _ in range(57)]  
+    row[1], row[3], row[2], row[4], row[5] = data[0], data[1], data[2], data[3], data[4]
 
-    
     if data[6] != 0:
-        row[6] = data[5]  # G,H: cycle_no 
-        row[7] = 0
+        row[6], row[7] = data[5], 0
     else:
-        row[6] = 0
-        row[7] = data[5]  # G,H: cycle_no 
+        row[6], row[7] = 0, data[5]
 
-    row[9] = data[6]  # J: cis_dose
-    row[12] = data[7]  # M: carb_dose
-    row[54] = data[8]  # BC: aki_history
+    row[9], row[12], row[54] = data[6], data[7], data[8]
 
     last_row = len(sheet.get_all_values()) + 1
-    # 在 A 欄插入 id_no 公式
-    row[0] = f'=IF(ROW()=2, 1, IF(COUNTIF(B$2:B{last_row-1}, B{last_row}) = 0, MAX(A$2:A{last_row-1}) + 1,IF(OR(H{last_row}<INDEX(H$2:H{last_row-1}, MAX(IF($B$2:B{last_row-1}=B{last_row}, ROW($B$2:B{last_row-1})-1, 0))),G{last_row}<INDEX(G$2:G{last_row-1}, MAX(IF($B$2:B{last_row-1}=B{last_row}, ROW($B$2:B{last_row-1})-1, 0))),F{last_row} - INDEX(F$2:F{last_row-1}, MAX(IF($B$2:B{last_row-1} = B{last_row}, ROW($B$2:B{last_row-1}) - 1, 0))) > 42), MAX(A$2:A{last_row-1}) + 1, INDEX(A$2:A{last_row-1}, MAX(IF(B$2:B{last_row-1}=B{last_row}, ROW($B$2:B{last_row-1})-1, 0))))))'
 
-    # 在 J 欄插入 treatment_duration 公式
+    row[0] = f'=IF(ROW()=2, 1, IF(COUNTIF(B$2:B{last_row-1}, B{last_row}) = 0, MAX(A$2:A{last_row-1}) + 1, IF(OR(H{last_row}<INDEX(H$2:H{last_row-1}, MAX(IF($B$2:B{last_row-1}=B{last_row}, ROW($B$2:B{last_row-1})-1, 0))),G{last_row}<INDEX(G$2:G{last_row-1}, MAX(IF($B$2:B{last_row-1}=B{last_row}, ROW($B$2:B{last_row-1})-1, 0))),F{last_row} - INDEX(F$2:F{last_row-1}, MAX(IF($B$2:B{last_row-1} = B{last_row}, ROW($B$2:B{last_row-1}) - 1, 0))) > 42), MAX(A$2:A{last_row-1}) + 1, INDEX(A$2:A{last_row-1}, MAX(IF(B$2:B{last_row-1}=B{last_row}, ROW($B$2:B{last_row-1})-1, 0))))))'
+
     row[8] = f'=IF(COUNTIF(A$2:A{last_row}, A{last_row}) = 1, 0, (F{last_row} - INDEX(F$2:F{last_row}, MATCH(A{last_row}, A$2:A{last_row}, 0)))/7)'
-    
-    # K 欄: 累積 Cisplatin 劑量
+
     row[10] = f'=SUMIF(A$2:A{last_row}, A{last_row}, J$2:J{last_row})'
-    
-    # L 欄: K 欄值 / G 欄值
     row[11] = f'=IF(OR(G{last_row}=0, K{last_row}=0), 0, K{last_row} / G{last_row})'
-    
-    # N 欄: 累積 Carboplatin 劑量
     row[13] = f'=SUMIF(A$2:A{last_row}, A{last_row}, M$2:M{last_row})'
-    
-    # O 欄: N 欄值 / H 欄值
     row[14] = f'=IF(OR(H{last_row}=0, N{last_row}=0), 0, N{last_row} / H{last_row})'
 
-    # 插入行資料
     sheet.append_row(row, value_input_option="USER_ENTERED")
 
-# Streamlit UI
+# --- Streamlit UI ---
 st.title("Chemotherapy Data Entry")
 
-number = st.text_input("Patient ID")   
-gender = st.selectbox("Gender", ["Male", "Female"])
-gender_value = 1 if gender == "Male" else 0  # 轉換性別數值  
-weight = st.number_input("Weight (kg)", min_value=0.0, format="%.1f")  
-age = st.number_input("Age", min_value=0)  
-treatment_date = st.date_input("Treatment Date", datetime.date.today())  
-cycle_no = st.number_input("Cycle Number", min_value=1)  
-cis_dose = st.number_input("Cisplatin Dose (mg)", min_value=0.0, format="%.1f")  
-carb_dose = st.number_input("Carboplatin Dose (mg)", min_value=0.0, format="%.1f")  
-aki_history = st.checkbox("AKI History (Check if Yes)")  
+col1, col2 = st.columns(2)
 
-if st.button("Submit"):
-    treatment_date_str = treatment_date.strftime("%Y/%m/%d")  # 轉換為 YYYY/MM/DD 格式
-    
-    data = [number, gender_value, weight, age, treatment_date_str, cycle_no, cis_dose, carb_dose, int(aki_history)] 
+with col1:
+    number = st.text_input("Patient ID")
+    weight = st.number_input("Weight (kg)", min_value=0.0, format="%.1f")
+    gender = st.selectbox("Gender", ["Male", "Female"])
+    gender_value = 1 if gender == "Male" else 0
+    age = st.number_input("Age", min_value=0)
+   
+
+with col2:
+    treatment_date = st.date_input("Treatment Date", datetime.date.today())
+    cycle_no = st.number_input("Cycle Number", min_value=1)
+    cis_dose = st.number_input("Cisplatin Dose (mg)", min_value=0.0, format="%.1f")
+    carb_dose = st.number_input("Carboplatin Dose (mg)", min_value=0.0, format="%.1f")
+    aki_history = st.checkbox("AKI History (Check if Yes)")
+
+if st.button("Predict"):
+    treatment_date_str = treatment_date.strftime("%Y/%m/%d")
+
+    data = [number, gender_value, weight, age, treatment_date_str, cycle_no, cis_dose, carb_dose, int(aki_history)]
     save_to_gsheet(data)
-    
-    st.success(f"✅ Data submitted successfully!")
+
+    st.success("✅ Data submitted successfully!")
+
+st.subheader("Predicted Risk:")
+st.write("📊 (模型預測結果顯示區域，未來可填入模型輸出)")
