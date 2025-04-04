@@ -36,6 +36,7 @@ def save_to_gsheet(data, sheet_name):
         row[11] = f'=IF(OR(G{last_row}=0, K{last_row}=0), 0, K{last_row} / G{last_row})'
         row[13] = f'=SUMIF(A$2:A{last_row}, A{last_row}, M$2:M{last_row})'
         row[14] = f'=IF(OR(H{last_row}=0, N{last_row}=0), 0, N{last_row} / H{last_row})'
+        row[15] = f'''=IF(MATCH(B{last_row}, B$2:B{last_row}, 0) = ROW()-1, Q{last_row}, INDEX(P$2:P{last_row-1}, MATCH(B{last_row}, B$2:B{last_row-1}, 0)))'''
         row[16] = f'=IFNA(INDEX(lab_data!H:H, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!H:H <> "")))) * (lab_data!H:H <> ""), 0)), "")'
 
     
