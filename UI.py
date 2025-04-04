@@ -38,7 +38,7 @@ def save_to_gsheet(data, sheet_name):
         row[14] = f'=IF(OR(H{last_row}=0, N{last_row}=0), 0, N{last_row} / H{last_row})'
         row[15] = f'=IF(MATCH(B{last_row}, B$2:B{last_row}, 0) = ROW()-1, Q{last_row}, INDEX(P$2:P{last_row-1}, MATCH(B{last_row}, B$2:B{last_row-1}, 0)))'
         row[16] = f'=IFNA(INDEX(lab_data!H:H, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!H:H <> "")))) * (lab_data!H:H <> ""), 0)), "")'
-        row[17] = f'=IFNA(IF(Q{last_row}="", "", INDEX(Q:Q, MATCH(1, (B:B = B{last_row}) * (F:F = MAX(FILTER(F:F, (B:B = B{last_row}) * (F:F <= F{last_row}) * (Q:Q <> "")))), 0)) - INDEX(Q:Q, MATCH(1, (B:B = B{last_row}) * (F:F = LARGE(FILTER(F:F, (B:B = B{last_row}) * (F:F <= F{last_row}) * (Q:Q <> "")), 2)), 0))), "")'
+        row[17] = f'=IFNA(IF(Q{last_row}="", "", INDEX(lab_data!H:H, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!H:H <> "")))) * (lab_data!H:H <> ""), 0)))-INDEX(lab_data!H:H, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = LARGE(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!H:H <> "")))) * (lab_data!H:H <> ""), 0)))'
         row[18] = f'=IF(Q{last_row}="", "", Q{last_row} - P{last_row})'
     
         sheet.append_row(row, value_input_option="USER_ENTERED")
