@@ -86,8 +86,8 @@ with col2:
 if st.button("Predict"):
     treatment_date_str = treatment_date.strftime("%Y/%m/%d")
 
-    data = [number, gender_value, weight, age, treatment_date_str, cycle_no, cis_dose, carb_dose, int(aki_history)]
-    save_to_gsheet(data, "chemo data")
+    chemo_data_list = [number, gender_value, weight, age, treatment_date_str, cycle_no, cis_dose, carb_dose, int(aki_history)]
+    save_to_gsheet(chemo_data_list, "chemo_data")
 
     st.success("✅ Data submitted successfully!")
 
@@ -100,7 +100,7 @@ st.title("Laboratory Data Entry")
 col3, col4 = st.columns(2)
 
 with col3:
-    lab_number = st.text_input("Patient ID (Lab Data)")
+    lab_number = st.text_input("Patient ID")
     weight_lab = st.number_input("Weight (kg) - Lab", min_value=0.0, format="%.1f")
     lab_date = st.date_input("Date", datetime.date.today())
 
@@ -113,6 +113,6 @@ with col4:
 
 if st.button("Submit Lab Data"):
     lab_date_str = lab_date.strftime("%Y/%m/%d")
-    lab_data = [lab_number, weight_lab, lab_date_str, bun or "", scr or "", hgb or "", sodium or "", potassium or ""]
-    save_to_gsheet(lab_data, "lab data")
+    lab_data_list = [lab_number, weight_lab, lab_date_str, bun or "", scr or "", hgb or "", sodium or "", potassium or ""]
+    save_to_gsheet(lab_data_list, "lab_data")
     st.success("✅ Laboratory data submitted successfully!")
