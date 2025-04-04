@@ -69,7 +69,7 @@ st.title("Chemotherapy Data Entry")
 col1, col2 = st.columns(2)
 
 with col1:
-    number = st.text_input("Patient ID (lab data)")
+    number = st.text_input("Patient ID (chemotherapy data)")
     weight = st.number_input("Weight (kg)", min_value=0.0, format="%.1f")
     gender = st.selectbox("Gender", ["Male", "Female"])
     gender_value = 1 if gender == "Male" else 0
@@ -100,7 +100,7 @@ st.title("Laboratory Data Entry")
 col3, col4 = st.columns(2)
 
 with col3:
-    lab_number = st.text_input("Patient ID")
+    lab_number = st.text_input("Patient ID (lab data)")
     weight_lab = st.number_input("Weight (kg) - Lab", min_value=0.0, format="%.1f")
     lab_date = st.date_input("Date", datetime.date.today())
 
