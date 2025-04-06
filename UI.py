@@ -25,8 +25,10 @@ def save_to_gsheet(data, sheet_name):
             row[6], row[7] = 0, data[5]
     
         row[9], row[12], row[54] = data[6], data[7], data[8]
-    
-        last_row = len(sheet.get_all_values()) + 1
+        
+        # 抓之前的資料
+        all_rows = sheet.get_all_values() 
+        last_row = len(all_rows) + 1
     
         row[0] = f'=IF(ROW()=2, 1, IF(COUNTIF(B$2:B{last_row-1}, B{last_row}) = 0, MAX(A$2:A{last_row-1}) + 1, IF(OR(H{last_row}<INDEX(H$2:H{last_row-1}, MAX(IF($B$2:B{last_row-1}=B{last_row}, ROW($B$2:B{last_row-1})-1, 0))),G{last_row}<INDEX(G$2:G{last_row-1}, MAX(IF($B$2:B{last_row-1}=B{last_row}, ROW($B$2:B{last_row-1})-1, 0))),F{last_row} - INDEX(F$2:F{last_row-1}, MAX(IF($B$2:B{last_row-1} = B{last_row}, ROW($B$2:B{last_row-1}) - 1, 0))) > 42), MAX(A$2:A{last_row-1}) + 1, INDEX(A$2:A{last_row-1}, MAX(IF(B$2:B{last_row-1}=B{last_row}, ROW($B$2:B{last_row-1})-1, 0))))))'
     
@@ -72,6 +74,29 @@ def save_to_gsheet(data, sheet_name):
         row[53] = f'=IF(BA{last_row}="", "", IF(D{last_row}=0, IF(BA{last_row}<=0.7, 141*((BA{last_row}/0.7)^-0.329)*0.993^E{last_row}*1.018, 141*((BA{last_row}/0.7)^-1.209)*0.993^E{last_row}*1.018), IF(BA{last_row}<=0.9, 141*((BA{last_row}/0.9)^-0.411)*0.993^E{last_row}, 141*((BA{last_row}/0.9)^-1.209)*0.993^E{last_row})))'
         row[55] = f'=IF(BA{last_row}="", "", IF(D{last_row}=1,IF(Q{last_row}>=1.3,IF(OR(BA{last_row}/P{last_row}>=1.5, BA{last_row}/Q{last_row}>=1.5), 1, 0),IF(OR(BA{last_row}/P{last_row}>=1.5, BA{last_row}/Q{last_row}>=1.5, BA{last_row}/1.3>=1.5), 1, 0)),IF(Q{last_row}>=1.1,IF(OR(BA{last_row}/P{last_row}>=1.5, BA{last_row}/Q{last_row}>=1.5), 1, 0),IF(OR(BA{last_row}/P{last_row}>=1.5, BA{last_row}/Q{last_row}>=1.5, BA{last_row}/1.1>=1.5), 1, 0))))'
 
+        # AKI_history判定
+        # 取得目前病人 ID 和給藥日期
+        current_id = data[0]
+        current_date = data[4]
+        has_aki_history = False
+        try:
+            current_date_obj = datetime.strptime(current_date, "%Y/%m/%d")
+            for r in reversed(all_rows[1:]):  # 排除標題列
+                id_match = r[1] == current_id
+                try:
+                    prev_date_obj = datetime.strptime(r[5], "%Y/%m/%d")  # F 欄是第 6 欄 (index=5)
+                except:
+                    continue
+        
+                if id_match and prev_date_obj < current_date_obj:
+                    if r[56] == "1":  # BD 是 index 56（即第 57 欄）
+                        has_aki_history = True
+                        break
+        except Exception as e:
+            print("Date parsing error:", e)
+        
+        # 設定 AKI history 欄位（row[54]）
+        row[54] = 1 if data[8] or has_aki_history else 0
     
         sheet.append_row(row, value_input_option="USER_ENTERED")
 
