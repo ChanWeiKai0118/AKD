@@ -70,6 +70,7 @@ def save_to_gsheet(data, sheet_name):
         row[46] = f'=IF(AS{last_row}="", "", AS{last_row} - AR{last_row})'
         row[52] = f'=IFNA(IF(MAX(FILTER(lab_data!H:H, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 14)))=0, "", MAX(FILTER(lab_data!H:H, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 14)))), "")'
         row[53] = f'=IF(BA{last_row}="", "", IF(D{last_row}=0, IF(BA{last_row}<=0.7, 141*((BA{last_row}/0.7)^-0.329)*0.993^E{last_row}*1.018, 141*((BA{last_row}/0.7)^-1.209)*0.993^E{last_row}*1.018), IF(BA{last_row}<=0.9, 141*((BA{last_row}/0.9)^-0.411)*0.993^E{last_row}, 141*((BA{last_row}/0.9)^-1.209)*0.993^E{last_row})))'
+        row[55] = f'=IF(BA{last_row}="", "", IF(D{last_row}=1,IF(Q{last_row}>=1.3,IF(OR(BA{last_row}/P{last_row}>=1.5, BA{last_row}/Q{last_row}>=1.5), 1, 0),IF(OR(BA{last_row}/P{last_row}>=1.5, BA{last_row}/Q{last_row}>=1.5, BA{last_row}/1.3>=1.5), 1, 0)),IF(Q{last_row}>=1.1,IF(OR(BA{last_row}/P{last_row}>=1.5, BA{last_row}/Q{last_row}>=1.5), 1, 0),IF(OR(BA{last_row}/P{last_row}>=1.5, BA{last_row}/Q{last_row}>=1.5, BA{last_row}/1.1>=1.5), 1, 0))))'
 
     
         sheet.append_row(row, value_input_option="USER_ENTERED")
