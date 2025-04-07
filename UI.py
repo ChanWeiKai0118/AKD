@@ -186,9 +186,9 @@ if st.button("Predict"):
     
     # 轉成數值型，非數字會變 NaN
     input_data = input_data.apply(pd.to_numeric, errors='coerce')
+    input_data.reset_index(drop=True, inplace=True)
     
     # 預覽
-    st.write(f"input_id: {input_id}")
     st.write("Input data to feed into LSTM model:")
     st.dataframe(input_data)
 
