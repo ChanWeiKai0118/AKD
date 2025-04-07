@@ -165,7 +165,7 @@ if st.button("Predict"):
     
     # 找出相同 id_no 的所有紀錄
     input_id = row_to_write[0]  # 你剛輸入病人資料的 id_no
-    df_filtered = df[df['id_no'] == input_id]
+    df_filtered = (df[df['id_no'] == input_id])
     
     # 修正錯字：True 拼錯為 Ture
     # 按照日期排序（你用的應該是 Index_date 1(dose) 欄位）
@@ -174,10 +174,11 @@ if st.button("Predict"):
     # 擷取指定欄位
     input_data = df_filtered[target_columns]
     
-    # 將所有欄位轉成 float，但不做 fillna（你會之後再做 imputation）
+    # 將所有欄位轉成 float
     input_data = input_data.apply(pd.to_numeric, errors='coerce')
     
     # 🔍 預覽 input_data（可在 Streamlit）
+    st.write("input_id : " input_id)
     st.write("Input data to feed into LSTM model:")
     st.success(input_data)
 
