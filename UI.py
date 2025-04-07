@@ -81,8 +81,11 @@ def save_to_gsheet(data, sheet_name):
             if r[1] == current_id and r[5] < current_date and r[55] == "1":  # 注意：從 Google Sheet 抓下來是字串
                 has_aki_history = True
                 break
-
-        row[54] = 1 if data[8] or has_aki_history else 0  # UI 有勾 or 過去有 AKI 就是 1
+        if data[8] or has_aki_history : 
+            row[54] = 1
+        else :
+            row[54] = 0  # UI 有勾 or 過去有 AKI 就是 1
+        
         return row
 
     elif sheet_name == "lab_data":
