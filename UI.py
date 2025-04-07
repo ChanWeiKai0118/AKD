@@ -97,9 +97,10 @@ def save_to_gsheet(data, sheet_name):
         
         # 設定 AKI history 欄位（row[54]）
         row[54] = 1 if data[8] or has_aki_history else 0
-        print(f"has_aki_history for ID {current_id} on {current_date}: {has_aki_history}")
+        
     
         sheet.append_row(row, value_input_option="USER_ENTERED")
+        return has_aki_history
 
     elif sheet_name == "lab_data":
         sheet = client.open("web data").worksheet("lab_data")
@@ -147,12 +148,13 @@ if st.button("Predict"):
     treatment_date_str = treatment_date.strftime("%Y/%m/%d")
 
     chemo_data_list = [number, gender_value, weight, age, treatment_date_str, cycle_no, cis_dose, carb_dose, int(aki_history)]
-    save_to_gsheet(chemo_data_list, "chemo_data")
+    has_aki_history = save_to_gsheet(chemo_data_list, "chemo_data")
 
     st.success("✅ Data submitted successfully!")
 
 st.subheader("Predicted Risk:")
 st.write("📊 (模型預測結果顯示區域，未來可填入模型輸出)")
+st.write(f"has_aki_history : {has_aki_history}")
 
 # --- 第二個 UI (檢驗數據) ---
 st.title("Laboratory Data Entry")
