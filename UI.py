@@ -160,7 +160,7 @@ if st.button("Predict"):
     'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history']
 
     # 讀取 Google Sheet 資料
-    all_data = worksheet.get_all_records()
+    all_data = sheet.get_all_records()
     df = pd.DataFrame(all_data)
     
     # 找出相同 id_no 的所有紀錄
