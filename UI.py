@@ -159,28 +159,36 @@ if st.button("Predict"):
     'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
     'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history']
 
-    # 讀取 Google Sheet 資料
-    all_data = sheet.get_all_records()
-    df = pd.DataFrame(all_data)
+    # 讀取整張表格（包含公式的計算結果）
+    raw_values = sheet.get_all_values()
     
-    # 找出相同 id_no 的所有紀錄
-    input_id = row_to_write[0]  # 你剛輸入病人資料的 id_no
-    df_filtered = (df[df['id_no'] == input_id])
+    # 將第0列視為欄位名稱，從第1列開始是資料
+    headers = raw_values[0]
+    data = raw_values[1:]
     
-    # 修正錯字：True 拼錯為 Ture
-    # 按照日期排序（你用的應該是 Index_date 1(dose) 欄位）
+    # 建立 DataFrame（這樣可以確保取得的是計算後的值）
+    df = pd.DataFrame(data, columns=headers)
+    
+    # 找出剛輸入的那筆 ID（直接從 row_to_write 裡取值）
+    input_id = row_to_write[0]
+    
+    # 篩選相同 ID 的資料
+    df_filtered = df[df['id_no'] == input_id]
+    
+    # 日期排序 + 擷取6筆資料
     df_filtered = df_filtered.sort_values(by='Index_date 1(dose)', ascending=True).tail(6)
     
-    # 擷取指定欄位
+    # 只取指定欄位
     input_data = df_filtered[target_columns]
     
-    # 將所有欄位轉成 float
+    # 轉成數值型，非數字會變 NaN
     input_data = input_data.apply(pd.to_numeric, errors='coerce')
     
-    # 🔍 預覽 input_data（可在 Streamlit）
-    st.write("input_id : ", input_id)
+    # 預覽
+    st.write(f"input_id: {input_id}")
     st.write("Input data to feed into LSTM model:")
-    st.success(input_data)
+    st.dataframe(input_data)
+
 
 
 st.subheader("Predicted Risk:")
