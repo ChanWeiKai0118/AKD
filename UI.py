@@ -100,7 +100,7 @@ def save_to_gsheet(data, sheet_name):
         
     
         sheet.append_row(row, value_input_option="USER_ENTERED")
-        return has_aki_history
+        return id_match, prev_date_obj, current_date_obj, has_aki_history
 
     elif sheet_name == "lab_data":
         sheet = client.open("web data").worksheet("lab_data")
@@ -145,17 +145,24 @@ with col2:
     aki_history = st.checkbox("AKI History (Check if Yes)")
 
 has_aki_history = 0
+current_date_obj = 0
+id_match = 0
+prev_date_obj = 0
+
 if st.button("Predict"):
     treatment_date_str = treatment_date.strftime("%Y/%m/%d")
 
     chemo_data_list = [number, gender_value, weight, age, treatment_date_str, cycle_no, cis_dose, carb_dose, int(aki_history)]
-    has_aki_history = save_to_gsheet(chemo_data_list, "chemo_data")
+    id_match, prev_date_obj,current_date_obj, has_aki_history = save_to_gsheet(chemo_data_list, "chemo_data")
 
     st.success("✅ Data submitted successfully!")
 
 st.subheader("Predicted Risk:")
 st.write("📊 (模型預測結果顯示區域，未來可填入模型輸出)")
 st.write(f"has_aki_history : {has_aki_history}")
+st.write(f"id_match : {id_match}")
+st.write(f"prev_date_obj : {prev_date_obj}")
+st.write(f"current_date_obj : {current_date_obj}")
 
 # --- 第二個 UI (檢驗數據) ---
 st.title("Laboratory Data Entry")
