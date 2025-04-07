@@ -76,6 +76,7 @@ def save_to_gsheet(data, sheet_name):
         
         # AKI_history判定
         # 取得目前病人 ID 和給藥日期
+        has_aki_history = False
         for r in reversed(all_rows[1:]):  # 從最新資料往回找
             if r[1] == current_id and r[5] < current_date and r[55] == "1":  # 注意：從 Google Sheet 抓下來是字串
                 has_aki_history = True
@@ -126,9 +127,6 @@ with col2:
     carb_dose = st.number_input("Carboplatin Dose (mg)", min_value=0.0, format="%.1f")
     aki_history = st.checkbox("AKI History (Check if Yes)")
 
-has_aki_history = None
-current_id = None
-date = None
 
 if st.button("Predict"):
     treatment_date_str = treatment_date.strftime("%Y/%m/%d")
