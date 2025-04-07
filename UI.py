@@ -76,6 +76,9 @@ def save_to_gsheet(data, sheet_name):
         
         # AKI_history判定
         # 取得目前病人 ID 和給藥日期
+        current_id = data[0]
+        current_date = data[4]
+        checkbox_checked = data[8]
         has_aki_history = False
         for r in reversed(all_rows[1:]):  # 從最新資料往回找
             if r[1] == current_id and r[5] < current_date and r[55] == "1":  # 注意：從 Google Sheet 抓下來是字串
