@@ -80,10 +80,10 @@ def save_to_gsheet(data, sheet_name):
         current_date = data[4]
         has_aki_history = False
         try:
-            current_date_obj = datetime.strptime(current_date, "%Y/%m/%d")
+            current_date_obj = current_date.strftime("%Y/%m/%d")
             for r in all_rows[1:]:  # 排除標題列
                 try:
-                    prev_date_obj = datetime.strptime(r[5], "%Y/%m/%d")  # F 欄是第 6 欄 (index=5)
+                    prev_date_obj = r[5].strftime("%Y/%m/%d")  # F 欄是第 6 欄 (index=5)
                 except:
                     continue
         
