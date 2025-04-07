@@ -81,7 +81,7 @@ def save_to_gsheet(data, sheet_name):
         has_aki_history = False
         try:
             current_date_obj = datetime.strptime(current_date, "%Y/%m/%d")
-            for r in reversed(all_rows[1:]):  # 排除標題列
+            for r in all_rows[1:]:  # 排除標題列
                 id_match = r[1] == current_id
                 try:
                     prev_date_obj = datetime.strptime(r[5], "%Y/%m/%d")  # F 欄是第 6 欄 (index=5)
