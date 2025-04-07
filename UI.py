@@ -79,27 +79,20 @@ def save_to_gsheet(data, sheet_name):
         current_id = data[0]
         current_date = data[4]
         has_aki_history = False
-        try:
-            current_date_obj = current_date.strftime("%Y/%m/%d")
-            for r in all_rows[1:]:  # 排除標題列
-                try:
-                    prev_date_obj = r[5].strftime("%Y/%m/%d")  # F 欄是第 6 欄 (index=5)
-                except:
-                    continue
-        
-                if r[1] == current_id and prev_date_obj < current_date_obj:
-                    if r[56] == "1":  # BD 是 index 56（即第 57 欄）
-                        has_aki_history = True
-                        break
-        except Exception as e:
-            print("Date parsing error:", e)
+
+        for r in all_rows[1:]:  # 排除標題列
+            if r[1] == current_id and r[5] < current_date:
+                if r[56] == "1":  # BD 是 index 56（即第 57 欄）
+                    has_aki_history = True
+                    break
+
         
         # 設定 AKI history 欄位（row[54]）
         row[54] = 1 if data[8] or has_aki_history else 0
         
     
         sheet.append_row(row, value_input_option="USER_ENTERED")
-        return current_id, prev_date_obj, current_date_obj, has_aki_history
+        return current_id, has_aki_history
 
     elif sheet_name == "lab_data":
         sheet = client.open("web data").worksheet("lab_data")
@@ -144,9 +137,7 @@ with col2:
     aki_history = st.checkbox("AKI History (Check if Yes)")
 
 has_aki_history = 0
-current_date_obj = 0
 current_id = 0
-prev_date_obj = 0
 
 if st.button("Predict"):
     treatment_date_str = treatment_date.strftime("%Y/%m/%d")
@@ -160,8 +151,6 @@ st.subheader("Predicted Risk:")
 st.write("📊 (模型預測結果顯示區域，未來可填入模型輸出)")
 st.write(f"has_aki_history : {has_aki_history}")
 st.write(f"current_id : {current_id}")
-st.write(f"prev_date_obj : {prev_date_obj}")
-st.write(f"current_date_obj : {current_date_obj}")
 
 # --- 第二個 UI (檢驗數據) ---
 st.title("Laboratory Data Entry")
