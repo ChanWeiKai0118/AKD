@@ -82,7 +82,7 @@ def save_to_gsheet(data, sheet_name):
 
         for r in all_rows[1:]:  # 排除標題列
             if r[1] == current_id and r[5] < current_date:
-                if r[56] == "1":  # BD 是 index 56（即第 57 欄）
+                if r[56] == 1:  # BD 是 index 56（即第 57 欄）
                     has_aki_history = True
                     break
 
