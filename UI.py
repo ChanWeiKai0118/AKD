@@ -178,8 +178,8 @@ if st.button("Predict"):
     input_data = input_data.apply(pd.to_numeric, errors='coerce')
     
     # 🔍 預覽 input_data（可在 Streamlit）
-    print("Input data to feed into LSTM model:")
-    print(input_data)
+    st.write("Input data to feed into LSTM model:")
+    st.success(input_data)
 
 
 st.subheader("Predicted Risk:")
