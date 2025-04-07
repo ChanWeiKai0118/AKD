@@ -136,14 +136,14 @@ with col2:
     carb_dose = st.number_input("Carboplatin Dose (mg)", min_value=0.0, format="%.1f")
     aki_history = st.checkbox("AKI History (Check if Yes)")
 
-has_aki_history = 0
+has_aki_history = None
 current_id = 0
 
 if st.button("Predict"):
     treatment_date_str = treatment_date.strftime("%Y/%m/%d")
 
     chemo_data_list = [number, gender_value, weight, age, treatment_date_str, cycle_no, cis_dose, carb_dose, int(aki_history)]
-    id_match, has_aki_history = save_to_gsheet(chemo_data_list, "chemo_data")
+    current_id, has_aki_history = save_to_gsheet(chemo_data_list, "chemo_data")
 
     st.success("✅ Data submitted successfully!")
 
