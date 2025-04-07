@@ -83,7 +83,7 @@ def save_to_gsheet(data, sheet_name):
         for r in reversed(all_rows[1:]):  # 從最新資料往回找
            if len(r) < 57: continue  # 避免長度錯誤
            if r[1] == current_id and r[5] < current_date:
-               if r[56] == "1":  # 注意：從 Google Sheet 抓下來是字串
+               if r[56] == 1:  # 注意：從 Google Sheet 抓下來是字串
                    has_aki_history = True
                    break
 
