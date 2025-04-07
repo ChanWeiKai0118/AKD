@@ -169,9 +169,12 @@ if st.button("Predict"):
     # 建立 DataFrame（這樣可以確保取得的是計算後的值）
     df = pd.DataFrame(data, columns=headers)
     
-    # 找出剛輸入的那筆 ID（直接從 row_to_write 裡取值）
-    input_id = row_to_write[0]
-    
+    # 假設你剛剛 append 的是最後一列
+    last_row_index = len(sheet.get_all_values())
+    last_row_values = sheet.row_values(last_row_index)
+    # 這裡你拿到的是公式運算後的值，不是 `'=A2'` 這種公式本身
+    input_id = last_row_values[0]
+
     # 篩選相同 ID 的資料
     df_filtered = df[df['id_no'] == input_id]
     
