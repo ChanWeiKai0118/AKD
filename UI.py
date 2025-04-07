@@ -82,13 +82,12 @@ def save_to_gsheet(data, sheet_name):
         try:
             current_date_obj = datetime.strptime(current_date, "%Y/%m/%d")
             for r in all_rows[1:]:  # 排除標題列
-                id_match = r[1] == current_id
                 try:
                     prev_date_obj = datetime.strptime(r[5], "%Y/%m/%d")  # F 欄是第 6 欄 (index=5)
                 except:
                     continue
         
-                if id_match and prev_date_obj < current_date_obj:
+                if r[1] == current_id and prev_date_obj < current_date_obj:
                     if r[56] == "1":  # BD 是 index 56（即第 57 欄）
                         has_aki_history = True
                         break
@@ -100,7 +99,7 @@ def save_to_gsheet(data, sheet_name):
         
     
         sheet.append_row(row, value_input_option="USER_ENTERED")
-        return id_match, prev_date_obj, current_date_obj, has_aki_history
+        return current_id, prev_date_obj, current_date_obj, has_aki_history
 
     elif sheet_name == "lab_data":
         sheet = client.open("web data").worksheet("lab_data")
@@ -146,7 +145,7 @@ with col2:
 
 has_aki_history = 0
 current_date_obj = 0
-id_match = 0
+current_id = 0
 prev_date_obj = 0
 
 if st.button("Predict"):
@@ -160,7 +159,7 @@ if st.button("Predict"):
 st.subheader("Predicted Risk:")
 st.write("📊 (模型預測結果顯示區域，未來可填入模型輸出)")
 st.write(f"has_aki_history : {has_aki_history}")
-st.write(f"id_match : {id_match}")
+st.write(f"current_id : {current_id}")
 st.write(f"prev_date_obj : {prev_date_obj}")
 st.write(f"current_date_obj : {current_date_obj}")
 
