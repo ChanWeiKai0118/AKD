@@ -80,19 +80,15 @@ def save_to_gsheet(data, sheet_name):
         current_date = data[4]
         has_aki_history = False
 
-        for r in all_rows[1:]:  # 排除標題列
-            if r[1] == current_id and r[5] < current_date:
-                if r[56] == 1:  # BD 是 index 56（即第 57 欄）
-                    has_aki_history = True
-                    break
+        for r in reversed(all_rows[1:]):  # 從最新資料往回找
+           if len(r) < 57: continue  # 避免長度錯誤
+           if r[1] == current_id and r[5] < current_date:
+               if r[56] == "1":  # 注意：從 Google Sheet 抓下來是字串
+                   has_aki_history = True
+                   break
 
-        
-        # 設定 AKI history 欄位（row[54]）
-        row[54] = 1 if data[8] or has_aki_history else 0
-        
-    
-        sheet.append_row(row, value_input_option="USER_ENTERED")
-        return current_id, has_aki_history
+        row[54] = 1 if checkbox_checked or has_aki_history else 0  # UI 有勾 or 過去有 AKI 就是 1
+        return row, has_aki_history, current_id
 
     elif sheet_name == "lab_data":
         sheet = client.open("web data").worksheet("lab_data")
@@ -137,20 +133,30 @@ with col2:
     aki_history = st.checkbox("AKI History (Check if Yes)")
 
 has_aki_history = None
-current_id = 0
+current_id = None
 
 if st.button("Predict"):
     treatment_date_str = treatment_date.strftime("%Y/%m/%d")
+    chemo_data_list = [
+        number, gender_value, weight, age, treatment_date_str,
+        cycle_no, cis_dose, carb_dose, aki_history  # 注意這裡保留 bool (True/False)
+    ]
 
-    chemo_data_list = [number, gender_value, weight, age, treatment_date_str, cycle_no, cis_dose, carb_dose, int(aki_history)]
-    current_id, has_aki_history = save_to_gsheet(chemo_data_list, "chemo_data")
+    # 回傳資料行、AKI 判定結果、病人 ID
+    row_to_write, has_aki_history, current_id = save_to_gsheet(chemo_data_list, "chemo_data")
+
+    # 這裡才送出資料
+    sheet = get_gsheet_client().open("web data").worksheet("chemo_data")
+    sheet.append_row(row_to_write, value_input_option="USER_ENTERED")
 
     st.success("✅ Data submitted successfully!")
 
 st.subheader("Predicted Risk:")
 st.write("📊 (模型預測結果顯示區域，未來可填入模型輸出)")
-st.write(f"has_aki_history : {has_aki_history}")
-st.write(f"current_id : {current_id}")
+if has_aki_history is not None:
+    st.write(f"has_aki_history : {has_aki_history}")
+if current_id:
+    st.write(f"current_id : {current_id}")
 
 # --- 第二個 UI (檢驗數據) ---
 st.title("Laboratory Data Entry")
