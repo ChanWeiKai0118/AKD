@@ -144,6 +144,7 @@ with col2:
     carb_dose = st.number_input("Carboplatin Dose (mg)", min_value=0.0, format="%.1f")
     aki_history = st.checkbox("AKI History (Check if Yes)")
 
+has_aki_history = 0
 if st.button("Predict"):
     treatment_date_str = treatment_date.strftime("%Y/%m/%d")
 
@@ -151,7 +152,7 @@ if st.button("Predict"):
     has_aki_history = save_to_gsheet(chemo_data_list, "chemo_data")
 
     st.success("✅ Data submitted successfully!")
-has_aki_history = 0
+
 st.subheader("Predicted Risk:")
 st.write("📊 (模型預測結果顯示區域，未來可填入模型輸出)")
 st.write(f"has_aki_history : {has_aki_history}")
