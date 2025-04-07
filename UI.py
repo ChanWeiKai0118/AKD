@@ -97,6 +97,7 @@ def save_to_gsheet(data, sheet_name):
         
         # 設定 AKI history 欄位（row[54]）
         row[54] = 1 if data[8] or has_aki_history else 0
+        print(f"has_aki_history for ID {current_id} on {current_date}: {has_aki_history}")
     
         sheet.append_row(row, value_input_option="USER_ENTERED")
 
