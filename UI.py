@@ -143,7 +143,7 @@ if st.button("Predict"):
     treatment_date_str = treatment_date.strftime("%Y/%m/%d")
 
     chemo_data_list = [number, gender_value, weight, age, treatment_date_str, cycle_no, cis_dose, carb_dose, int(aki_history)]
-    id_match, prev_date_obj,current_date_obj, has_aki_history = save_to_gsheet(chemo_data_list, "chemo_data")
+    id_match, has_aki_history = save_to_gsheet(chemo_data_list, "chemo_data")
 
     st.success("✅ Data submitted successfully!")
 
