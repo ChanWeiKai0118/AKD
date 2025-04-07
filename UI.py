@@ -3,6 +3,8 @@ import streamlit as st
 from google.oauth2.service_account import Credentials
 import gspread
 import datetime
+import pandas as pd
+import numpy as np
 
 def get_gsheet_client():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -149,6 +151,36 @@ if st.button("Predict"):
     sheet.append_row(row_to_write, value_input_option="USER_ENTERED")
 
     st.success("✅ Data submitted successfully!")
+
+    target_columns = [
+    'id_no', 'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
+    'average_cis_cum_dose', 'carb_cum_dose', 'baseline_hemoglobin',
+    'baseline_bun', 'baseline_bun/scr', 'baseline_egfr', 'baseline_sodium',
+    'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
+    'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history']
+
+    # 讀取 Google Sheet 資料
+    all_data = worksheet.get_all_records()
+    df = pd.DataFrame(all_data)
+    
+    # 找出相同 id_no 的所有紀錄
+    input_id = row_to_write[0]  # 你剛輸入病人資料的 id_no
+    df_filtered = df[df['id_no'] == input_id]
+    
+    # 修正錯字：True 拼錯為 Ture
+    # 按照日期排序（你用的應該是 Index_date 1(dose) 欄位）
+    df_filtered = df_filtered.sort_values(by='Index_date 1(dose)', ascending=True).tail(6)
+    
+    # 擷取指定欄位
+    input_data = df_filtered[target_columns]
+    
+    # 將所有欄位轉成 float，但不做 fillna（你會之後再做 imputation）
+    input_data = input_data.apply(pd.to_numeric, errors='coerce')
+    
+    # 🔍 預覽 input_data（可在 Streamlit）
+    print("Input data to feed into LSTM model:")
+    print(input_data)
+
 
 st.subheader("Predicted Risk:")
 st.write("📊 (模型預測結果顯示區域，未來可填入模型輸出)")
