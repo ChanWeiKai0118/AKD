@@ -83,12 +83,12 @@ def save_to_gsheet(data, sheet_name):
         for r in reversed(all_rows[1:]):  # 從最新資料往回找
            if len(r) < 57: continue  # 避免長度錯誤
            if r[1] == current_id and r[5] < current_date:
-               if r[56] == 1:  # 注意：從 Google Sheet 抓下來是字串
+               if r[56] == "1":  # 注意：從 Google Sheet 抓下來是字串
                    has_aki_history = True
                    break
 
         row[54] = 1 if data[8] or has_aki_history else 0  # UI 有勾 or 過去有 AKI 就是 1
-        return row, has_aki_history, current_id
+        return row, has_aki_history, r[1],r[5]
 
     elif sheet_name == "lab_data":
         sheet = client.open("web data").worksheet("lab_data")
@@ -134,6 +134,7 @@ with col2:
 
 has_aki_history = None
 current_id = None
+date = None
 
 if st.button("Predict"):
     treatment_date_str = treatment_date.strftime("%Y/%m/%d")
@@ -143,7 +144,7 @@ if st.button("Predict"):
     ]
 
     # 回傳資料行、AKI 判定結果、病人 ID
-    row_to_write, has_aki_history, current_id = save_to_gsheet(chemo_data_list, "chemo_data")
+    row_to_write, has_aki_history, current_id,date = save_to_gsheet(chemo_data_list, "chemo_data")
 
     # 這裡才送出資料
     sheet = get_gsheet_client().open("web data").worksheet("chemo_data")
@@ -155,8 +156,8 @@ st.subheader("Predicted Risk:")
 st.write("📊 (模型預測結果顯示區域，未來可填入模型輸出)")
 if has_aki_history is not None:
     st.write(f"has_aki_history : {has_aki_history}")
-if current_id:
     st.write(f"current_id : {current_id}")
+    st.write(f"date : {date}")
 
 # --- 第二個 UI (檢驗數據) ---
 st.title("Laboratory Data Entry")
