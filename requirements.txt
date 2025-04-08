@@ -9,5 +9,4 @@ lightgbm
 qrcode
 gspread
 datetime
-MinMaxScaler
 keras
