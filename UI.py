@@ -13,6 +13,9 @@ from tensorflow.keras.saving import load_model
 import sklearn
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
+#超重要，model的threshold
+optimal_threshold = 0.29
+
 # Load the model
 url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/AKD-LSTM.zip"
 response = requests.get(url)
@@ -307,8 +310,17 @@ if st.button("Predict"):
     outcome='akd',
     maxlen=6)
 
-    st.write("X_test shape:", X_test.shape)
-    st.write("y_test shape:", y_test.shape)
+    # 计算权重，忽略 padding 部分
+    sample_weight = (y_test != -1).astype(float).flatten()
+    
+    # 预测概率
+    y_prob = model.predict(X_test)
+    y_prob = y_prob.squeeze().flatten()
+
+    # 过滤掉 padding 数据
+    valid_indices = sample_weight > 0
+    flat_prob = y_prob[valid_indices]
+    st.write(flat_prob)
 
 
 
