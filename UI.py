@@ -23,7 +23,7 @@ url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/AKD-LSTM.zip"
 response = requests.get(url)
 z = zipfile.ZipFile(io.BytesIO(response.content))
 z.extractall(".")
-model = load_model("AKD-LSTM.keras", custom_objects={'auprc': auprc}))
+model = load_model("AKD-LSTM.keras", custom_objects={'auprc': auprc})
 
 # Load the scaler
 scaler_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_scaler.pkl"
