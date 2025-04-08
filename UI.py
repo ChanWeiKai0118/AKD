@@ -14,7 +14,6 @@ from tensorflow.keras.saving import load_model
 # GitHub Raw URLs for model and scaler
 github_model_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/AKD-LSTM.keras"
 scaler_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_scaler.pkl"
-imputation_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_miceforest.pkl"
 
 # Load the model
 response = requests.get(github_model_url)
@@ -33,7 +32,7 @@ url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_miceforest.
 r = requests.get(url)
 z = zipfile.ZipFile(io.BytesIO(r.content))
 z.extractall(".")
-imputer = joblib.load("akd_miceforest.pkl")
+miceforest = joblib.load("akd_miceforest.pkl")
 
 target_columns = [
     'id_no', 'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
