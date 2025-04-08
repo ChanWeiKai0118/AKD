@@ -10,7 +10,7 @@ from sklearn.preprocessing import MinMaxScaler
 import joblib
 import requests, zipfile, io
 from tensorflow.keras.saving import load_model
-
+st.write("scikit-learn version:", sklearn.__version__)
 # Load the model
 url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/AKD-LSTM.zip"
 response = requests.get(url)
