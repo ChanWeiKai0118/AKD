@@ -312,7 +312,10 @@ if st.button("Predict"):
     outcome='akd',
     maxlen=6)
 
-    st.write("X_test:", X_test)
+    X_test_2d = np.squeeze(X_test)  # shape (6, 39)
+    X_test_df = pd.DataFrame(X_test_2d)
+    st.write("X_test:", X_test_df)
+    
     # 计算权重，忽略 padding 部分
     sample_weight = (y_test != -1).astype(float).flatten()
     
