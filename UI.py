@@ -5,6 +5,14 @@ import gspread
 import datetime
 import pandas as pd
 import numpy as np
+from tensorflow import keras
+from sklearn.preprocessing import MinMaxScaler
+
+
+# GitHub Raw URLs for model and scaler
+github_model_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/AKD-LSTM.keras"
+scaler_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_scaler.joblib"
+imputation_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_miceforest.joblib"
 
 def get_gsheet_client():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
