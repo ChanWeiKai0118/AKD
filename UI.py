@@ -312,6 +312,7 @@ if st.button("Predict"):
     outcome='akd',
     maxlen=6)
 
+    st.write("X_test:", X_test)
     # 计算权重，忽略 padding 部分
     sample_weight = (y_test != -1).astype(float).flatten()
     
