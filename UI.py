@@ -9,7 +9,7 @@ from tensorflow import keras
 from sklearn.preprocessing import MinMaxScaler
 import joblib
 import requests
-
+from tensorflow.keras.saving import load_model
 
 # GitHub Raw URLs for model and scaler
 github_model_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/AKD-LSTM.keras"
@@ -20,7 +20,7 @@ imputation_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_
 response = requests.get(github_model_url)
 with open("AKD-LSTM.keras", "wb") as f:
     f.write(response.content)
-model = joblib.load("AKD-LSTM.keras")
+model = load_model("AKD-LSTM.keras")
 
 # Load the scaler
 scaler_response = requests.get(scaler_url)
@@ -31,7 +31,7 @@ normalizer = joblib.load("akd_scaler.pkl")
 # Load the imputation
 imputation_response = requests.get(imputation_url)
 with open("akd_miceforest.pkl", "wb") as imputation_file:
-    imputation_file.write(scaler_response.content)
+    imputation_file.write(imputation_response.content)
 miceforest = joblib.load("akd_miceforest.pkl")
 
 target_columns = [
