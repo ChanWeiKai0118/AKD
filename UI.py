@@ -8,6 +8,7 @@ import numpy as np
 from tensorflow import keras
 from sklearn.preprocessing import MinMaxScaler
 import joblib
+import requests
 
 
 # GitHub Raw URLs for model and scaler
