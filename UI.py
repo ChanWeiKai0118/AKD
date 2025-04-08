@@ -8,7 +8,7 @@ import numpy as np
 from tensorflow import keras
 from sklearn.preprocessing import MinMaxScaler
 import joblib
-import requests
+import requests, zipfile, io
 from tensorflow.keras.saving import load_model
 
 # GitHub Raw URLs for model and scaler
@@ -29,10 +29,11 @@ with open("akd_scaler.pkl", "wb") as scaler_file:
 normalizer = joblib.load("akd_scaler.pkl")
 
 # Load the imputation
-imputation_response = requests.get(imputation_url)
-with open("akd_miceforest.pkl", "wb") as imputation_file:
-    imputation_file.write(imputation_response.content)
-miceforest = joblib.load("akd_miceforest.pkl")
+url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_miceforest.zip"
+r = requests.get(url)
+z = zipfile.ZipFile(io.BytesIO(r.content))
+z.extractall(".")
+imputer = joblib.load("akd_miceforest.pkl")
 
 target_columns = [
     'id_no', 'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
