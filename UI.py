@@ -11,6 +11,7 @@ import joblib
 import requests, zipfile, io
 from tensorflow.keras.saving import load_model
 import sklearn
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 # Load the model
 url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/AKD-LSTM.zip"
