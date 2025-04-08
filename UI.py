@@ -11,17 +11,15 @@ import joblib
 import requests, zipfile, io
 from tensorflow.keras.saving import load_model
 
-# GitHub Raw URLs for model and scaler
-github_model_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/AKD-LSTM.keras"
-scaler_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_scaler.pkl"
-
 # Load the model
-response = requests.get(github_model_url)
-with open("AKD-LSTM.keras", "wb") as f:
-    f.write(response.content)
+url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/AKD-LSTM.zip"
+response = requests.get(url)
+z = zipfile.ZipFile(io.BytesIO(response.content))
+z.extractall(".")
 model = load_model("AKD-LSTM.keras")
 
 # Load the scaler
+scaler_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_scaler.pkl"
 scaler_response = requests.get(scaler_url)
 with open("akd_scaler.pkl", "wb") as scaler_file:
     scaler_file.write(scaler_response.content)
