@@ -61,6 +61,35 @@ selected_features = [
     'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
     'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history']
 
+def post_sequential_padding( # (for return_sequences True)
+        data, groupby_col, selected_features, outcome, maxlen
+    ):
+    grouped = data.groupby(groupby_col)
+    sequences = []
+    labels = []
+    for name, group in grouped:
+        sequences.append(group[selected_features].values)
+        labels.append(group[[outcome]].values)
+
+    X = pad_sequences(
+        sequences,
+        maxlen=maxlen,
+        dtype='float32',
+        padding='post',
+        truncating='post',
+        value=-1
+    )
+
+    y = pad_sequences(
+        labels,
+        maxlen=maxlen,
+        padding='post',
+        truncating='post',
+        value=-1
+    )
+
+    return X, y
+        
 def preprocessing(
         data, scaler, imputer, cols_for_preprocessing,
         selected_features, groupby_col, outcome, maxlen
