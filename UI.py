@@ -7,12 +7,82 @@ import pandas as pd
 import numpy as np
 from tensorflow import keras
 from sklearn.preprocessing import MinMaxScaler
+import joblib
 
 
 # GitHub Raw URLs for model and scaler
 github_model_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/AKD-LSTM.keras"
 scaler_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_scaler.pkl"
 imputation_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_miceforest.pkl"
+
+# Load the model
+response = requests.get(github_model_url)
+with open("AKD-LSTM.keras", "wb") as f:
+    f.write(response.content)
+model = joblib.load("AKD-LSTM.keras")
+
+# Load the scaler
+scaler_response = requests.get(scaler_url)
+with open("akd_scaler.pkl", "wb") as scaler_file:
+    scaler_file.write(scaler_response.content)
+normalizer = joblib.load("akd_scaler.pkl")
+
+# Load the imputation
+imputation_response = requests.get(imputation_url)
+with open("akd_miceforest.pkl", "wb") as imputation_file:
+    imputation_file.write(scaler_response.content)
+miceforest = joblib.load("akd_miceforest.pkl")
+
+target_columns = [
+    'id_no', 'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
+    'average_cis_cum_dose', 'carb_cum_dose', 'baseline_hemoglobin',
+    'baseline_bun', 'baseline_bun/scr', 'baseline_egfr', 'baseline_sodium',
+    'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
+    'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history']
+cols_for_preprocessing = [
+    'id_no', 'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
+    'average_cis_cum_dose', 'carb_cum_dose', 'baseline_hemoglobin',
+    'baseline_bun', 'baseline_bun/scr', 'baseline_egfr', 'baseline_sodium',
+    'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
+    'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history',
+    'akd']
+selected_features = [
+    'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
+    'average_cis_cum_dose', 'carb_cum_dose', 'baseline_hemoglobin',
+    'baseline_bun', 'baseline_bun/scr', 'baseline_egfr', 'baseline_sodium',
+    'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
+    'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history']
+
+def preprocessing(
+        data, scaler, imputer, cols_for_preprocessing,
+        selected_features, groupby_col, outcome, maxlen
+    ):
+    # passing arguments
+    test = data
+    scaler_ = scaler
+    imputer_ = imputer
+
+    # feature selection
+    test_selected = test[cols_for_preprocessing]
+
+    # imputation
+    test_imputed = test_selected.copy()
+    test_imputed[selected_features] = imputer_.transform(test_selected[selected_features])
+
+    # scaling
+    test_scaled = test_imputed.copy()
+    test_scaled[selected_features] = scaler_.transform(test_imputed[selected_features])
+
+    # sequential padding
+    X_test, y_test = post_sequential_padding(
+        data=test_scaled,
+        groupby_col=groupby_col,
+        selected_features=selected_features,
+        outcome=outcome,
+        maxlen=maxlen
+    )
+
+    return X_test, y_test
 
 def get_gsheet_client():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -160,13 +230,6 @@ if st.button("Predict"):
 
     st.success("✅ Data submitted successfully!")
 
-    target_columns = [
-    'id_no', 'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
-    'average_cis_cum_dose', 'carb_cum_dose', 'baseline_hemoglobin',
-    'baseline_bun', 'baseline_bun/scr', 'baseline_egfr', 'baseline_sodium',
-    'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
-    'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history']
-
     # 讀取整張表格（包含公式的計算結果）
     raw_values = sheet.get_all_values()
     
@@ -203,6 +266,19 @@ if st.button("Predict"):
     #加上akd
     input_data.loc[input_data.index[-1], 'akd'] = 0
 
+    #進行imputation和scaler
+    X_test, y_test = preprocessing(
+    data=input_data,
+    scaler=normalizer,
+    imputer=miceforest,
+    cols_for_preprocessing=cols_for_preprocessing,
+    groupby_col='id_no',
+    selected_features=selected_features,
+    outcome='akd',
+    maxlen=6)
+
+    st.write("X_test shape:", X_test.shape)
+    st.write("y_test shape:", y_test.shape)
 
 
 
