@@ -9,4 +9,4 @@ lightgbm
 qrcode
 gspread
 datetime
-tensorflow
+tensorflow==2.18.0
