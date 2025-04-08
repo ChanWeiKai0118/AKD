@@ -12,16 +12,18 @@ import requests, zipfile, io
 from tensorflow.keras.saving import load_model
 import sklearn
 from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.metrics import AUC
 
 #超重要，model的threshold
 optimal_threshold = 0.29
+auprc = AUC(curve='PR', name='auprc')
 
 # Load the model
 url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/AKD-LSTM.zip"
 response = requests.get(url)
 z = zipfile.ZipFile(io.BytesIO(response.content))
 z.extractall(".")
-model = load_model("AKD-LSTM.keras")
+model = load_model("AKD-LSTM.keras", custom_objects={'auprc': auprc}))
 
 # Load the scaler
 scaler_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_scaler.pkl"
@@ -325,7 +327,6 @@ if st.button("Predict"):
 
 
 st.subheader("Predicted Risk:")
-st.write("📊 (模型預測結果顯示區域，未來可填入模型輸出)")
 
 # --- 第二個 UI (檢驗數據) ---
 st.title("Laboratory Data Entry")
