@@ -352,7 +352,7 @@ elif mode == "Preview mode":
                 preview_cols = ['Number', 'weight', 'sex_male', 'age', 'Index_date 1(dose)', 'cis_cycle', 'carb_cycle', 'cis_dose','carb_dose','aki_history']
                 filtered_df = df[preview_cols]
                 filtered_df = filtered_df[filtered_df['Number'] == number_preview]
-                st.dataframe(filtered_df)
+                st.dataframe(df)
                 
                 if not filtered_df.empty:
                     st.subheader(f"Patient information（ID: {number_preview}）")
