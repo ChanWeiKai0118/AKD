@@ -236,10 +236,10 @@ def save_to_gsheet(data, sheet_name):
 # --- Streamlit UI ---
 st.title("Chemotherapy Data Entry")
 
-mode = st.radio("選擇模式", options=["預測模式", "預覽模式"], horizontal=True)
+mode = st.radio("Select mode", options=["Predict mode", "Preview mode"], horizontal=True)
 
 # 預測模式
-if mode == "預測模式":
+if mode == "Predict mode":
     st.subheader("🔮 Prediction Mode")
     col1, col2 = st.columns(2)
 
@@ -339,9 +339,9 @@ if mode == "預測模式":
         st.subheader(f"Predicted Risk: {last_prob:.2f}%")
 # -----------------------------
 # 預覽模式
-elif mode == "預覽模式":
+elif mode == "Preview mode":
     st.subheader("🗂️ Preview Mode")
-    number_preview = st.text_input("輸入病人 ID", key="preview_id")
+    number_preview = st.text_input("Input patient ID", key="preview_id")
     if st.button("Check"):
         if number_preview:
             try:
@@ -350,18 +350,18 @@ elif mode == "預覽模式":
                 all_data = sheet.get_all_records()
                 df = pd.DataFrame(all_data)
 
-                filtered_df = df[df['id_no'] == number_preview]
+                filtered_df = df[df['Number'] == number_preview]
                 preview_cols = ['id_no', 'name', 'gender', 'age', 'height', 'weight', 'bsa', 'chemo_type', 'chemo_start_date']
                 
                 if not filtered_df.empty:
-                    st.subheader(f"現有病人資料（ID: {number_preview}）")
+                    st.subheader(f"Patient information（ID: {number_preview}）")
                     st.dataframe(filtered_df[preview_cols])
                 else:
-                    st.info("❗ 此病人尚未輸入資料。")
+                    st.info("❗ The patient has no chemotherapy data")
             except Exception as e:
-                st.error(f"讀取 Google Sheet 發生錯誤：{e}")
+                st.error(f"Something wrong when loading Google Sheet ：{e}")
         else:
-            st.warning("請輸入病人 ID 才能預覽")
+            st.warning("Please enter patient ID")
 
 # --- 第二個 UI (檢驗數據) ---
 st.title("Laboratory Data Entry")
