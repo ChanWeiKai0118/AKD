@@ -289,6 +289,12 @@ if st.button("Predict"):
     # 篩選相同 ID 的資料
     df_filtered = df[df['id_no'] == input_id]
     
+    # 顯示輸入資料原始樣貌（僅保留指定欄位）
+    cols_to_show = ['Number', 'weight', 'sex_male', 'age', 'Index_date 1(dose)', 'cis_cycle', 'carb_cycle', 'cis_dose','carb_dose']
+    preview_data = df_filtered[cols_to_show].tail(6)  # 取最後6筆
+    st.subheader("Data to feed into LSTM model")
+    st.dataframe(preview_data)
+    
     # 日期排序 + 擷取6筆資料
     df_filtered = df_filtered.sort_values(by='Index_date 1(dose)', ascending=True).tail(6)
     
@@ -331,7 +337,7 @@ if st.button("Predict"):
     valid_indices = sample_weight > 0
     flat_prob = y_prob[valid_indices]
     last_prob = flat_prob[-1] * 100
-    st.write("Predicted Risk:", f"{last_prob:.2f}%")
+    st.subheader("Predicted Risk:", f"{last_prob:.2f}%")
 
 # --- 第二個 UI (檢驗數據) ---
 st.title("Laboratory Data Entry")
