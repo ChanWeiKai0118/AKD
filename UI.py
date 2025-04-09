@@ -337,7 +337,7 @@ if mode == "預測模式":
         flat_prob = y_prob[valid_indices]
         last_prob = flat_prob[-1] * 100
         st.subheader(f"Predicted Risk: {last_prob:.2f}%")
------------------------------
+# -----------------------------
 # 預覽模式
 elif mode == "預覽模式":
     st.subheader("🗂️ Preview Mode")
