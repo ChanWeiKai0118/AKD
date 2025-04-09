@@ -234,151 +234,134 @@ def save_to_gsheet(data, sheet_name):
 
 
 # --- Streamlit UI ---
-# 初始化狀態
-if 'mode' not in st.session_state:
-    st.session_state.mode = 'predict'  # 預設為輸入模式
-
-# 共用 Patient ID 輸入
 st.title("Chemotherapy Data Entry")
-number = st.text_input("Patient ID (chemotherapy data)", key="patient_id")
 
-# 按鈕：切換模式
-col_btn1, col_btn2 = st.columns(2)
-with col_btn1:
-    if st.button("Preview mode"):
-        st.session_state.mode = 'preview'
-with col_btn2:
-    if st.button("Predict mode"):
-        st.session_state.mode = 'predict'
+mode = st.radio("選擇模式", options=["預測模式", "預覽模式"], horizontal=True)
 
-# 顯示不同區塊
-if st.session_state.mode == 'preview':
-    if number:
-        # 🟡 載入 Google Sheet 並預覽該病人資料
-        client = get_gsheet_client()
-        sheet = client.open("web data").worksheet("chemo_data")
-        all_data = sheet.get_all_records()
-        df = pd.DataFrame(all_data)
-
-        filtered_df = df[df['id_no'] == number]
-        preview_cols = ['Number', 'weight', 'sex_male', 'age', 'Index_date 1(dose)', 'cis_cycle', 'carb_cycle', 'cis_dose','carb_dose','aki_history']
-        st.subheader(f"現有病人資料（ID: {number}）")
-        st.dataframe(filtered_df[preview_cols])
-    else:
-        st.warning("請先輸入病人 ID")
-
-elif st.session_state.mode == 'predict':
-    # 🟢 顯示輸入表單欄位
+# 預測模式
+if mode == "預測模式":
+    st.subheader("🔮 Prediction Mode")
     col1, col2 = st.columns(2)
 
     with col1:
+        number_pred = st.text_input("Patient ID (chemotherapy data)", key="predict_id")
         weight = st.number_input("Weight (kg)", min_value=0.0, format="%.1f")
         gender = st.selectbox("Gender", ["Male", "Female"])
         gender_value = 1 if gender == "Male" else 0
         age = st.number_input("Age", min_value=0)
-        treatment_date = st.date_input("Treatment Date", datetime.date.today())
-        
+
     with col2:
+        treatment_date = st.date_input("Treatment Date", datetime.date.today())
         cycle_no = st.number_input("Cycle Number", min_value=1)
         cis_dose = st.number_input("Cisplatin Dose (mg)", min_value=0.0, format="%.1f")
         carb_dose = st.number_input("Carboplatin Dose (mg)", min_value=0.0, format="%.1f")
         aki_history = st.checkbox("AKI History (Check if Yes)")
-
-    # 🧩 準備你的資料 list（等之後要寫入 / 模型預測用）
-    if number:
+        
+    if st.button("Predict"):
         treatment_date_str = treatment_date.strftime("%Y/%m/%d")
         chemo_data_list = [
             number, gender_value, weight, age, treatment_date_str,
-            cycle_no, cis_dose, carb_dose, aki_history
+            cycle_no, cis_dose, carb_dose, aki_history  # 注意這裡保留 bool (True/False)
         ]
-        st.write("輸入資料準備好了，可進行預測或儲存。")
-    else:
-        st.warning("請先輸入病人 ID")
-
-else:
-    st.info("請選擇一個操作：預覽或預測")
-
-
-if st.button("Predict"):
-    treatment_date_str = treatment_date.strftime("%Y/%m/%d")
-    chemo_data_list = [
-        number, gender_value, weight, age, treatment_date_str,
-        cycle_no, cis_dose, carb_dose, aki_history  # 注意這裡保留 bool (True/False)
-    ]
-
-    # 回傳資料行、AKI 判定結果、病人 ID
-    row_to_write = save_to_gsheet(chemo_data_list, "chemo_data")
-
-    # 這裡才送出資料
-    sheet = get_gsheet_client().open("web data").worksheet("chemo_data")
-    sheet.append_row(row_to_write, value_input_option="USER_ENTERED")
-
-    st.success("✅ Data submitted successfully!")
-
-    # 讀取整張表格（包含公式的計算結果）
-    raw_values = sheet.get_all_values()
     
-    # 將第0列視為欄位名稱，從第1列開始是資料
-    headers = raw_values[0]
-    data = raw_values[1:]
+        # 回傳資料行、AKI 判定結果、病人 ID
+        row_to_write = save_to_gsheet(chemo_data_list, "chemo_data")
     
-    # 建立 DataFrame（這樣可以確保取得的是計算後的值）
-    df = pd.DataFrame(data, columns=headers)
+        # 這裡才送出資料
+        sheet = get_gsheet_client().open("web data").worksheet("chemo_data")
+        sheet.append_row(row_to_write, value_input_option="USER_ENTERED")
     
-    # 假設你剛剛 append 的是最後一列
-    last_row_index = len(sheet.get_all_values())
-    last_row_values = sheet.row_values(last_row_index)
-    # 這裡你拿到的是公式運算後的值，不是 `'=A2'` 這種公式本身
-    input_id = last_row_values[0]
+        st.success("✅ Data submitted successfully!")
+    
+        # 讀取整張表格（包含公式的計算結果）
+        raw_values = sheet.get_all_values()
+        
+        # 將第0列視為欄位名稱，從第1列開始是資料
+        headers = raw_values[0]
+        data = raw_values[1:]
+        
+        # 建立 DataFrame（這樣可以確保取得的是計算後的值）
+        df = pd.DataFrame(data, columns=headers)
+        
+        # 假設你剛剛 append 的是最後一列
+        last_row_index = len(sheet.get_all_values())
+        last_row_values = sheet.row_values(last_row_index)
+        # 這裡你拿到的是公式運算後的值，不是 `'=A2'` 這種公式本身
+        input_id = last_row_values[0]
+    
+        # 篩選相同 ID 的資料
+        df_filtered = df[df['id_no'] == input_id]
+        
+        # 顯示輸入資料原始樣貌（僅保留指定欄位）
+        cols_to_show = ['Number', 'weight', 'sex_male', 'age', 'Index_date 1(dose)', 'cis_cycle', 'carb_cycle', 'cis_dose','carb_dose']
+        preview_data = df_filtered[cols_to_show].tail(6)  # 取最後6筆
+        st.subheader("Data to feed into LSTM model")
+        st.dataframe(preview_data)
+        
+        # 日期排序 + 擷取6筆資料
+        df_filtered = df_filtered.sort_values(by='Index_date 1(dose)', ascending=True).tail(6)
+        
+        # 只取指定欄位
+        input_data = df_filtered[target_columns]
+        
+        # 轉成數值型，非數字會變 NaN
+        input_data = input_data.apply(pd.to_numeric, errors='coerce')
+        input_data.reset_index(drop=True, inplace=True)
+    
+        #加上akd
+        input_data.loc[input_data.index[-1], 'akd'] = 0
+    
+        #進行imputation和scaler
+        X_test, y_test = preprocessing(
+        data=input_data,
+        scaler=normalizer,
+        imputer=miceforest,
+        cols_for_preprocessing=cols_for_preprocessing,
+        groupby_col='id_no',
+        selected_features=selected_features,
+        outcome='akd',
+        maxlen=6)
+    
+        X_test_2d = np.squeeze(X_test)  # shape (6, 39)
+        X_test_df = pd.DataFrame(X_test_2d)
+        
+        # 计算权重，忽略 padding 部分
+        sample_weight = (y_test != -1).astype(float).flatten()
+        
+        # 预测概率
+        y_prob = model.predict(X_test)
+        y_prob = y_prob.squeeze().flatten()
+        
+        # 过滤掉 padding 数据
+        valid_indices = sample_weight > 0
+        flat_prob = y_prob[valid_indices]
+        last_prob = flat_prob[-1] * 100
+        st.subheader(f"Predicted Risk: {last_prob:.2f}%")
+-----------------------------
+# 預覽模式
+elif mode == "預覽模式":
+    st.subheader("🗂️ Preview Mode")
+    number_preview = st.text_input("輸入病人 ID", key="preview_id")
+    if st.button("Check"):
+        if number_preview:
+            try:
+                client = get_gsheet_client()
+                sheet = client.open("web data").worksheet("chemo_data")
+                all_data = sheet.get_all_records()
+                df = pd.DataFrame(all_data)
 
-    # 篩選相同 ID 的資料
-    df_filtered = df[df['id_no'] == input_id]
-    
-    # 顯示輸入資料原始樣貌（僅保留指定欄位）
-    cols_to_show = ['Number', 'weight', 'sex_male', 'age', 'Index_date 1(dose)', 'cis_cycle', 'carb_cycle', 'cis_dose','carb_dose']
-    preview_data = df_filtered[cols_to_show].tail(6)  # 取最後6筆
-    st.subheader("Data to feed into LSTM model")
-    st.dataframe(preview_data)
-    
-    # 日期排序 + 擷取6筆資料
-    df_filtered = df_filtered.sort_values(by='Index_date 1(dose)', ascending=True).tail(6)
-    
-    # 只取指定欄位
-    input_data = df_filtered[target_columns]
-    
-    # 轉成數值型，非數字會變 NaN
-    input_data = input_data.apply(pd.to_numeric, errors='coerce')
-    input_data.reset_index(drop=True, inplace=True)
-
-    #加上akd
-    input_data.loc[input_data.index[-1], 'akd'] = 0
-
-    #進行imputation和scaler
-    X_test, y_test = preprocessing(
-    data=input_data,
-    scaler=normalizer,
-    imputer=miceforest,
-    cols_for_preprocessing=cols_for_preprocessing,
-    groupby_col='id_no',
-    selected_features=selected_features,
-    outcome='akd',
-    maxlen=6)
-
-    X_test_2d = np.squeeze(X_test)  # shape (6, 39)
-    X_test_df = pd.DataFrame(X_test_2d)
-    
-    # 计算权重，忽略 padding 部分
-    sample_weight = (y_test != -1).astype(float).flatten()
-    
-    # 预测概率
-    y_prob = model.predict(X_test)
-    y_prob = y_prob.squeeze().flatten()
-    
-    # 过滤掉 padding 数据
-    valid_indices = sample_weight > 0
-    flat_prob = y_prob[valid_indices]
-    last_prob = flat_prob[-1] * 100
-    st.subheader(f"Predicted Risk: {last_prob:.2f}%")
+                filtered_df = df[df['id_no'] == number_preview]
+                preview_cols = ['id_no', 'name', 'gender', 'age', 'height', 'weight', 'bsa', 'chemo_type', 'chemo_start_date']
+                
+                if not filtered_df.empty:
+                    st.subheader(f"現有病人資料（ID: {number_preview}）")
+                    st.dataframe(filtered_df[preview_cols])
+                else:
+                    st.info("❗ 此病人尚未輸入資料。")
+            except Exception as e:
+                st.error(f"讀取 Google Sheet 發生錯誤：{e}")
+        else:
+            st.warning("請輸入病人 ID 才能預覽")
 
 # --- 第二個 UI (檢驗數據) ---
 st.title("Laboratory Data Entry")
