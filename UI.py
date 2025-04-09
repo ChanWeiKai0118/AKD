@@ -304,10 +304,6 @@ if st.button("Predict"):
     # 轉成數值型，非數字會變 NaN
     input_data = input_data.apply(pd.to_numeric, errors='coerce')
     input_data.reset_index(drop=True, inplace=True)
-    
-    # 預覽
-    st.write("Input data to feed into LSTM model:")
-    st.dataframe(input_data)
 
     #加上akd
     input_data.loc[input_data.index[-1], 'akd'] = 0
@@ -337,6 +333,7 @@ if st.button("Predict"):
     valid_indices = sample_weight > 0
     flat_prob = y_prob[valid_indices]
     last_prob = flat_prob[-1] * 100
+    st.write(last_prob)
     st.subheader("Predicted Risk:", f"{last_prob:.2f}%")
 
 # --- 第二個 UI (檢驗數據) ---
