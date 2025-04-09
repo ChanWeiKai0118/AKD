@@ -326,9 +326,10 @@ if st.button("Predict"):
     # 预测概率
     y_prob = model.predict(X_test)
     y_prob = y_prob.squeeze().flatten()
-
+    
     # 过滤掉 padding 数据
     valid_indices = sample_weight > 0
+    flat_prob = y_prob[valid_indices]
     last_prob = flat_prob[-1] * 100
     st.write("Predicted Risk:", f"{last_prob:.2f}%")
 
