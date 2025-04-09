@@ -320,7 +320,6 @@ if st.button("Predict"):
 
     X_test_2d = np.squeeze(X_test)  # shape (6, 39)
     X_test_df = pd.DataFrame(X_test_2d)
-    st.write("X_test:", X_test_df)
     
     # 计算权重，忽略 padding 部分
     sample_weight = (y_test != -1).astype(float).flatten()
@@ -331,12 +330,8 @@ if st.button("Predict"):
 
     # 过滤掉 padding 数据
     valid_indices = sample_weight > 0
-    flat_prob = y_prob[valid_indices]
-    st.write(flat_prob)
-
-
-
-st.subheader("Predicted Risk:")
+    last_prob = flat_prob[-1] * 100
+    st.write("Predicted Risk:", f"{last_prob:.2f}%")
 
 # --- 第二個 UI (檢驗數據) ---
 st.title("Laboratory Data Entry")
