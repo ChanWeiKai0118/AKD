@@ -234,24 +234,76 @@ def save_to_gsheet(data, sheet_name):
 
 
 # --- Streamlit UI ---
+import streamlit as st
+import pandas as pd
+import datetime
+import gspread  # 若你使用 gspread 讀 Google Sheet
+
+# 初始化狀態
+if 'mode' not in st.session_state:
+    st.session_state.mode = 'input'  # 預設為輸入模式
+
+# 共用 Patient ID 輸入
 st.title("Chemotherapy Data Entry")
+number = st.text_input("Patient ID (chemotherapy data)", key="patient_id")
 
-col1, col2 = st.columns(2)
+# 按鈕：切換模式
+col_btn1, col_btn2 = st.columns(2)
+with col_btn1:
+    if st.button("預覽病人資料"):
+        st.session_state.mode = 'preview'
+with col_btn2:
+    if st.button("Predict"):
+        st.session_state.mode = 'predict'
 
-with col1:
-    number = st.text_input("Patient ID (chemotherapy data)")
-    weight = st.number_input("Weight (kg)", min_value=0.0, format="%.1f")
-    gender = st.selectbox("Gender", ["Male", "Female"])
-    gender_value = 1 if gender == "Male" else 0
-    age = st.number_input("Age", min_value=0)
-   
+# 顯示不同區塊
+if st.session_state.mode == 'preview':
+    if number:
+        # 🟡 載入 Google Sheet 並預覽該病人資料
+        gc = gspread.service_account(filename='your-credentials.json')
+        sh = gc.open('web data')
+        worksheet = sh.worksheet('chemo_data')
+        all_data = worksheet.get_all_records()
+        df = pd.DataFrame(all_data)
 
-with col2:
-    treatment_date = st.date_input("Treatment Date", datetime.date.today())
-    cycle_no = st.number_input("Cycle Number", min_value=1)
-    cis_dose = st.number_input("Cisplatin Dose (mg)", min_value=0.0, format="%.1f")
-    carb_dose = st.number_input("Carboplatin Dose (mg)", min_value=0.0, format="%.1f")
-    aki_history = st.checkbox("AKI History (Check if Yes)")
+        filtered_df = df[df['id_no'] == number]
+        preview_cols = ['id_no', 'name', 'gender', 'age', 'height', 'weight', 'bsa', 'chemo_type', 'chemo_start_date']
+        st.subheader(f"現有病人資料（ID: {number}）")
+        st.dataframe(filtered_df[preview_cols])
+    else:
+        st.warning("請先輸入病人 ID")
+
+elif st.session_state.mode == 'predict':
+    # 🟢 顯示輸入表單欄位
+    col1, col2 = st.columns(2)
+
+    with col1:
+        weight = st.number_input("Weight (kg)", min_value=0.0, format="%.1f")
+        gender = st.selectbox("Gender", ["Male", "Female"])
+        gender_value = 1 if gender == "Male" else 0
+        age = st.number_input("Age", min_value=0)
+
+    with col2:
+        treatment_date = st.date_input("Treatment Date", datetime.date.today())
+        cycle_no = st.number_input("Cycle Number", min_value=1)
+        cis_dose = st.number_input("Cisplatin Dose (mg)", min_value=0.0, format="%.1f")
+        carb_dose = st.number_input("Carboplatin Dose (mg)", min_value=0.0, format="%.1f")
+        aki_history = st.checkbox("AKI History (Check if Yes)")
+
+    # 🧩 準備你的資料 list（等之後要寫入 / 模型預測用）
+    if number:
+        treatment_date_str = treatment_date.strftime("%Y/%m/%d")
+        chemo_data_list = [
+            number, gender_value, weight, age, treatment_date_str,
+            cycle_no, cis_dose, carb_dose, aki_history
+        ]
+        st.write("輸入資料準備好了，可進行預測或儲存。")
+    else:
+        st.warning("請先輸入病人 ID")
+
+else:
+    st.info("請選擇一個操作：預覽或預測")
+
 
 
 if st.button("Predict"):
