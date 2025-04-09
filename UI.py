@@ -260,7 +260,6 @@ if mode == "Predict mode":
     if st.button("Predict"):
         treatment_date_str = treatment_date.strftime("%Y/%m/%d")
         number = str(number).zfill(8)  # 強制補滿8位數
-        st.write(number)
         chemo_data_list = [
             number, gender_value, weight, age, treatment_date_str,
             cycle_no, cis_dose, carb_dose, aki_history  # 注意這裡保留 bool (True/False)
@@ -268,7 +267,7 @@ if mode == "Predict mode":
     
         # 回傳資料行、AKI 判定結果、病人 ID
         row_to_write = save_to_gsheet(chemo_data_list, "chemo_data")
-    
+        row_to_write[1] = number
         # 這裡才送出資料
         sheet = get_gsheet_client().open("web data").worksheet("chemo_data")
         sheet.append_row(row_to_write, value_input_option="USER_ENTERED")
@@ -293,7 +292,7 @@ if mode == "Predict mode":
     
         # 篩選相同 ID 的資料
         df_filtered = df[df['id_no'] == input_id]
-        
+        df_filtered['Number'] = number
         # 顯示輸入資料原始樣貌（僅保留指定欄位）
         cols_to_show = ['Number', 'weight', 'sex_male', 'age', 'Index_date 1(dose)', 'cis_cycle', 'carb_cycle', 'cis_dose','carb_dose','aki_history']
         preview_data = df_filtered[cols_to_show].tail(6)  # 取最後6筆
@@ -344,6 +343,7 @@ if mode == "Predict mode":
 elif mode == "Preview mode":
     st.subheader("🗂️ Preview Mode")
     number_preview = st.text_input("Input patient ID", key="preview_id")
+    number_preview = str(number_preview).zfill(8)  # 強制補滿8位數
     if st.button("Check"):
         if number_preview:
             try:
@@ -353,9 +353,8 @@ elif mode == "Preview mode":
                 df = pd.DataFrame(all_data)
                 preview_cols = ['Number', 'weight', 'sex_male', 'age', 'Index_date 1(dose)', 'cis_cycle', 'carb_cycle', 'cis_dose','carb_dose','aki_history']
                 filtered_df = df[preview_cols]
-                st.dataframe(filtered_df)
                 filtered_df = filtered_df[filtered_df['Number'] == number_preview]
-                
+                st.dataframe(filtered_df)
                 
                 if not filtered_df.empty:
                     st.subheader(f"Patient information（ID: {number_preview}）")
