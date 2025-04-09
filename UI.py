@@ -24,15 +24,8 @@ url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/AKD-LSTM.zip"
 response = requests.get(url)
 z = zipfile.ZipFile(io.BytesIO(response.content))
 z.extractall(".")
-try:
-    model = load_model("AKD-LSTM.keras", custom_objects={'auprc': auprc}, compile=False, safe_mode=False)
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=[auprc])
-    st.success("Model loaded successfully.")
-except Exception as e:
-    st.error(f"Error loading model: {e}")
-
-
-
+model = load_model("AKD-LSTM.keras", custom_objects={'auprc': auprc}, compile=False, safe_mode=False)
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=[auprc])
 
 # Load the scaler
 scaler_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_scaler.pkl"
