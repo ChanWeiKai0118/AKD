@@ -17,15 +17,19 @@ from keras.models import load_model
 
 #超重要，model的threshold
 optimal_threshold = 0.29
-auprc = AUC(curve='PR', name='auprc')
+
 
 # Load the model
-url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/AKD-LSTM.zip"
-response = requests.get(url)
-z = zipfile.ZipFile(io.BytesIO(response.content))
-z.extractall(".")
-model = load_model("AKD-LSTM.keras", custom_objects={'auprc': auprc}, compile=False, safe_mode=False)
-model.compile(optimizer='adam', loss='binary_crossentropy', metrics=[auprc])
+def get_model():
+    auprc = AUC(curve='PR', name='auprc')
+    url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/AKD-LSTM.zip"
+    response = requests.get(url)
+    z = zipfile.ZipFile(io.BytesIO(response.content))
+    z.extractall(".")
+    model = load_model("AKD-LSTM.keras", custom_objects={'auprc': auprc}, compile=False, safe_mode=False)
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=[auprc])
+    return model
+model = get_model()
 
 # Load the scaler
 scaler_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_scaler.pkl"
