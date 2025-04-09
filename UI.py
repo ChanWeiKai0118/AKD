@@ -21,14 +21,13 @@ optimal_threshold = 0.29
 
 # Load the model
 def get_model():
-    auprc = AUC(curve='PR', name='auprc')
     url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/AKD-LSTM.zip"
     response = requests.get(url)
     z = zipfile.ZipFile(io.BytesIO(response.content))
     z.extractall(".")
-    model = load_model("AKD-LSTM.keras", custom_objects={'auprc': auprc}, compile=False, safe_mode=False)
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=[auprc])
+    model = load_model("AKD-LSTM.keras", compile=False)
     return model
+
 model = get_model()
 
 # Load the scaler
