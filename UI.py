@@ -234,14 +234,9 @@ def save_to_gsheet(data, sheet_name):
 
 
 # --- Streamlit UI ---
-import streamlit as st
-import pandas as pd
-import datetime
-import gspread  # 若你使用 gspread 讀 Google Sheet
-
 # 初始化狀態
 if 'mode' not in st.session_state:
-    st.session_state.mode = 'input'  # 預設為輸入模式
+    st.session_state.mode = 'predict'  # 預設為輸入模式
 
 # 共用 Patient ID 輸入
 st.title("Chemotherapy Data Entry")
@@ -250,7 +245,7 @@ number = st.text_input("Patient ID (chemotherapy data)", key="patient_id")
 # 按鈕：切換模式
 col_btn1, col_btn2 = st.columns(2)
 with col_btn1:
-    if st.button("預覽病人資料"):
+    if st.button("preview"):
         st.session_state.mode = 'preview'
 with col_btn2:
     if st.button("Predict"):
@@ -260,14 +255,13 @@ with col_btn2:
 if st.session_state.mode == 'preview':
     if number:
         # 🟡 載入 Google Sheet 並預覽該病人資料
-        gc = gspread.service_account(filename='your-credentials.json')
-        sh = gc.open('web data')
-        worksheet = sh.worksheet('chemo_data')
-        all_data = worksheet.get_all_records()
+        client = get_gsheet_client()
+        sheet = client.open("web data").worksheet("chemo_data")
+        all_data = sheet.get_all_records()
         df = pd.DataFrame(all_data)
 
         filtered_df = df[df['id_no'] == number]
-        preview_cols = ['id_no', 'name', 'gender', 'age', 'height', 'weight', 'bsa', 'chemo_type', 'chemo_start_date']
+        preview_cols = ['Number', 'weight', 'sex_male', 'age', 'Index_date 1(dose)', 'cis_cycle', 'carb_cycle', 'cis_dose','carb_dose','aki_history']
         st.subheader(f"現有病人資料（ID: {number}）")
         st.dataframe(filtered_df[preview_cols])
     else:
@@ -282,9 +276,9 @@ elif st.session_state.mode == 'predict':
         gender = st.selectbox("Gender", ["Male", "Female"])
         gender_value = 1 if gender == "Male" else 0
         age = st.number_input("Age", min_value=0)
-
-    with col2:
         treatment_date = st.date_input("Treatment Date", datetime.date.today())
+        
+    with col2:
         cycle_no = st.number_input("Cycle Number", min_value=1)
         cis_dose = st.number_input("Cisplatin Dose (mg)", min_value=0.0, format="%.1f")
         carb_dose = st.number_input("Carboplatin Dose (mg)", min_value=0.0, format="%.1f")
@@ -303,7 +297,6 @@ elif st.session_state.mode == 'predict':
 
 else:
     st.info("請選擇一個操作：預覽或預測")
-
 
 
 if st.button("Predict"):
