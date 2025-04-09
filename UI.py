@@ -293,7 +293,7 @@ if mode == "Predict mode":
         df_filtered = df[df['id_no'] == input_id]
         
         # 顯示輸入資料原始樣貌（僅保留指定欄位）
-        cols_to_show = ['Number', 'weight', 'sex_male', 'age', 'Index_date 1(dose)', 'cis_cycle', 'carb_cycle', 'cis_dose','carb_dose']
+        cols_to_show = ['Number', 'weight', 'sex_male', 'age', 'Index_date 1(dose)', 'cis_cycle', 'carb_cycle', 'cis_dose','carb_dose','aki_history']
         preview_data = df_filtered[cols_to_show].tail(6)  # 取最後6筆
         st.subheader("Data to feed into LSTM model")
         st.dataframe(preview_data)
@@ -349,13 +349,14 @@ elif mode == "Preview mode":
                 sheet = client.open("web data").worksheet("chemo_data")
                 all_data = sheet.get_all_records()
                 df = pd.DataFrame(all_data)
-
-                filtered_df = df[df['Number'] == number_preview]
-                preview_cols = ['id_no', 'name', 'gender', 'age', 'height', 'weight', 'bsa', 'chemo_type', 'chemo_start_date']
+                preview_cols = ['Number', 'weight', 'sex_male', 'age', 'Index_date 1(dose)', 'cis_cycle', 'carb_cycle', 'cis_dose','carb_dose','aki_history']
+                filtered_df = df[preview_cols]
+                filtered_df = filtered_df[filtered_df['Number'] == number_preview]
+                st.dataframe(filtered_df)
                 
                 if not filtered_df.empty:
                     st.subheader(f"Patient information（ID: {number_preview}）")
-                    st.dataframe(filtered_df[preview_cols])
+                    st.dataframe(filtered_df)
                 else:
                     st.info("❗ The patient has no chemotherapy data")
             except Exception as e:
