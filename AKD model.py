@@ -5,6 +5,119 @@ import gspread
 import datetime
 import pandas as pd
 import numpy as np
+from tensorflow import keras
+from sklearn.preprocessing import MinMaxScaler
+import joblib
+import requests, zipfile, io
+from tensorflow.keras.saving import load_model
+import sklearn
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.metrics import AUC
+
+#超重要，model的threshold
+optimal_threshold = 0.29
+auprc = AUC(curve='PR', name='auprc')
+
+# Load the model
+url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/AKD-LSTM.zip"
+response = requests.get(url)
+z = zipfile.ZipFile(io.BytesIO(response.content))
+z.extractall(".")
+model = load_model("AKD-LSTM.keras", custom_objects={'auprc': auprc})
+
+# Load the scaler
+scaler_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_scaler.pkl"
+scaler_response = requests.get(scaler_url)
+with open("akd_scaler.pkl", "wb") as scaler_file:
+    scaler_file.write(scaler_response.content)
+normalizer = joblib.load("akd_scaler.pkl")
+
+# Load the imputation
+url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_miceforest.zip"
+r = requests.get(url)
+z = zipfile.ZipFile(io.BytesIO(r.content))
+z.extractall(".")
+miceforest = joblib.load("akd_miceforest.pkl")
+
+target_columns = [
+    'id_no', 'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
+    'average_cis_cum_dose', 'carb_cum_dose', 'baseline_hemoglobin',
+    'baseline_bun', 'baseline_bun/scr', 'baseline_egfr', 'baseline_sodium',
+    'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
+    'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history']
+cols_for_preprocessing = [
+    'id_no', 'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
+    'average_cis_cum_dose', 'carb_cum_dose', 'baseline_hemoglobin',
+    'baseline_bun', 'baseline_bun/scr', 'baseline_egfr', 'baseline_sodium',
+    'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
+    'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history',
+    'akd']
+selected_features = [
+    'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
+    'average_cis_cum_dose', 'carb_cum_dose', 'baseline_hemoglobin',
+    'baseline_bun', 'baseline_bun/scr', 'baseline_egfr', 'baseline_sodium',
+    'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
+    'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history']
+
+def post_sequential_padding( # (for return_sequences True)
+        data, groupby_col, selected_features, outcome, maxlen
+    ):
+    grouped = data.groupby(groupby_col)
+    sequences = []
+    labels = []
+    for name, group in grouped:
+        sequences.append(group[selected_features].values)
+        labels.append(group[[outcome]].values)
+
+    X = pad_sequences(
+        sequences,
+        maxlen=maxlen,
+        dtype='float32',
+        padding='post',
+        truncating='post',
+        value=-1
+    )
+
+    y = pad_sequences(
+        labels,
+        maxlen=maxlen,
+        padding='post',
+        truncating='post',
+        value=-1
+    )
+
+    return X, y
+        
+def preprocessing(
+        data, scaler, imputer, cols_for_preprocessing,
+        selected_features, groupby_col, outcome, maxlen
+    ):
+    # passing arguments
+    test = data
+    scaler_ = scaler
+    imputer_ = imputer
+
+    # feature selection
+    test_selected = test[cols_for_preprocessing]
+
+    # imputation
+    test_imputed = test_selected.copy()
+    test_imputed[selected_features] = imputer_.transform(test_selected[selected_features])
+
+    # scaling
+    test_scaled = test_imputed.copy()
+    test_scaled[selected_features] = scaler_.transform(test_imputed[selected_features])
+
+    # sequential padding
+    X_test, y_test = post_sequential_padding(
+        data=test_scaled,
+        groupby_col=groupby_col,
+        selected_features=selected_features,
+        outcome=outcome,
+        maxlen=maxlen
+    )
+
+    return X_test, y_test
 
 def get_gsheet_client():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -42,35 +155,35 @@ def save_to_gsheet(data, sheet_name):
         row[14] = f'=IF(OR(H{last_row}=0, N{last_row}=0), 0, N{last_row} / H{last_row})'
         row[15] = f'=IF(MATCH(B{last_row}, B$2:B{last_row}, 0) = ROW()-1,IF(Q{last_row} <> "", Q{last_row},IFNA(INDEX(lab_data!H:H,MATCH(1,(lab_data!A:A = B{last_row}) *(lab_data!E:E = MAX(FILTER(lab_data!E:E,(lab_data!A:A = B{last_row}) *(lab_data!E:E <= F{last_row}) *(lab_data!E:E >= F{last_row} - 90) *(lab_data!H:H <> "")))),0)), "")),INDEX(P$2:P{last_row-1}, MATCH(B{last_row}, B$2:B{last_row-1}, 0)))'
         row[16] = f'=IFNA(INDEX(lab_data!H:H, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!H:H <> "")))) * (lab_data!H:H <> ""), 0)), "")'
-        row[17] = f'=IFNA(IF(Q{last_row}="", "", INDEX(lab_data!H:H, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!H:H <> "")))) * (lab_data!H:H <> ""), 0)))-INDEX(lab_data!H:H, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = LARGE(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 90) * (lab_data!H:H <> "")),2)) * (lab_data!H:H <> ""), 0)))'
+        row[17] = f'=IFNA(IF(Q{last_row}="", "", INDEX(lab_data!H:H, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!H:H <> "")))) * (lab_data!H:H <> ""), 0))-INDEX(lab_data!H:H, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = LARGE(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 90) * (lab_data!H:H <> "")),2)) * (lab_data!H:H <> ""), 0))))'
         row[18] = f'=IF(Q{last_row}="", "", Q{last_row} - P{last_row})'
         row[19] = f'=IF(MATCH(B{last_row}, B$2:B{last_row}, 0) = ROW()-1,IF(U{last_row} <> "", U{last_row},IFNA(INDEX(lab_data!J:J,MATCH(1,(lab_data!A:A = B{last_row}) *(lab_data!E:E = MAX(FILTER(lab_data!E:E,(lab_data!A:A = B{last_row}) *(lab_data!E:E <= F{last_row}) *(lab_data!E:E >= F{last_row} - 90) *(lab_data!J:J <> "")))),0)), "")),INDEX(T$2:T{last_row-1}, MATCH(B{last_row}, B$2:B{last_row-1}, 0)))'
         row[20] = f'=IFNA(INDEX(lab_data!J:J, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!J:J <> "")))) * (lab_data!J:J <> ""), 0)), "")'
-        row[21] = f'=IFNA(IF(U{last_row}="", "", INDEX(lab_data!J:J, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!J:J <> "")))) * (lab_data!J:J <> ""), 0)))-INDEX(lab_data!J:J, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = LARGE(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 90) * (lab_data!J:J <> "")),2)) * (lab_data!J:J <> ""), 0)))'
+        row[21] = f'=IFNA(IF(U{last_row}="", "", INDEX(lab_data!J:J, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!J:J <> "")))) * (lab_data!J:J <> ""), 0))-INDEX(lab_data!J:J, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = LARGE(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 90) * (lab_data!J:J <> "")),2)) * (lab_data!J:J <> ""), 0))))'
         row[22] = f'=IF(U{last_row}="", "", U{last_row} - T{last_row})'
         row[23] = f'=IF(MATCH(B{last_row}, B$2:B{last_row}, 0) = ROW()-1,IF(Y{last_row} <> "", Y{last_row},IFNA(INDEX(lab_data!K:K,MATCH(1,(lab_data!A:A = B{last_row}) *(lab_data!E:E = MAX(FILTER(lab_data!E:E,(lab_data!A:A = B{last_row}) *(lab_data!E:E <= F{last_row}) *(lab_data!E:E >= F{last_row} - 90) *(lab_data!K:K <> "")))),0)), "")),INDEX(X$2:X{last_row-1}, MATCH(B{last_row}, B$2:B{last_row-1}, 0)))'
         row[24] = f'=IFNA(INDEX(lab_data!K:K, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!K:K <> "")))) * (lab_data!K:K <> ""), 0)), "")'
-        row[25] = f'=IFNA(IF(Y{last_row}="", "", INDEX(lab_data!K:K, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!K:K <> "")))) * (lab_data!K:K <> ""), 0)))-INDEX(lab_data!K:K, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = LARGE(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 90) * (lab_data!K:K <> "")),2)) * (lab_data!K:K <> ""), 0)))'
+        row[25] = f'=IFNA(IF(Y{last_row}="", "", INDEX(lab_data!K:K, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!K:K <> "")))) * (lab_data!K:K <> ""), 0))-INDEX(lab_data!K:K, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = LARGE(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 90) * (lab_data!K:K <> "")),2)) * (lab_data!K:K <> ""), 0))))'
         row[26] = f'=IF(Y{last_row}="", "", Y{last_row} - X{last_row})'
         row[27] = f'=IF(MATCH(B{last_row}, B$2:B{last_row}, 0) = ROW()-1,IF(AC{last_row} <> "", AC{last_row},IFNA(INDEX(lab_data!G:G,MATCH(1,(lab_data!A:A = B{last_row}) *(lab_data!E:E = MAX(FILTER(lab_data!E:E,(lab_data!A:A = B{last_row}) *(lab_data!E:E <= F{last_row}) *(lab_data!E:E >= F{last_row} - 90) *(lab_data!G:G <> "")))),0)), "")),INDEX(AB$2:AB{last_row-1}, MATCH(B{last_row}, B$2:B{last_row-1}, 0)))'
         row[28] = f'=IFNA(INDEX(lab_data!G:G, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!G:G <> "")))) * (lab_data!G:G <> ""), 0)), "")'
-        row[29] = f'=IFNA(IF(AC{last_row}="", "", INDEX(lab_data!G:G, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!G:G <> "")))) * (lab_data!G:G <> ""), 0)))-INDEX(lab_data!G:G, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = LARGE(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 90) * (lab_data!G:G <> "")),2)) * (lab_data!G:G <> ""), 0)))'
+        row[29] = f'=IFNA(IF(AC{last_row}="", "", INDEX(lab_data!G:G, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!G:G <> "")))) * (lab_data!G:G <> ""), 0))-INDEX(lab_data!G:G, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = LARGE(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 90) * (lab_data!G:G <> "")),2)) * (lab_data!G:G <> ""), 0))))'
         row[30] = f'=IF(AC{last_row}="", "", AC{last_row} - AB{last_row})'
         row[31] = f'=IF(MATCH(B{last_row}, B$2:B{last_row}, 0) = ROW()-1,IF(AG{last_row} <> "", AG{last_row},IFNA(INDEX(lab_data!I:I,MATCH(1,(lab_data!A:A = B{last_row}) *(lab_data!E:E = MAX(FILTER(lab_data!E:E,(lab_data!A:A = B{last_row}) *(lab_data!E:E <= F{last_row}) *(lab_data!E:E >= F{last_row} - 90) *(lab_data!I:I <> "")))),0)), "")),INDEX(AF$2:AF{last_row-1}, MATCH(B{last_row}, B$2:B{last_row-1}, 0)))'
         row[32] = f'=IFNA(INDEX(lab_data!I:I, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!I:I <> "")))) * (lab_data!I:I <> ""), 0)), "")'
-        row[33] = f'=IFNA(IF(AG{last_row}="", "", INDEX(lab_data!I:I, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!I:I <> "")))) * (lab_data!I:I <> ""), 0)))-INDEX(lab_data!I:I, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = LARGE(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 90) * (lab_data!I:I <> "")),2)) * (lab_data!I:I <> ""), 0)))'
+        row[33] = f'=IFNA(IF(AG{last_row}="", "", INDEX(lab_data!I:I, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!I:I <> "")))) * (lab_data!I:I <> ""), 0))-INDEX(lab_data!I:I, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = LARGE(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 90) * (lab_data!I:I <> "")),2)) * (lab_data!I:I <> ""), 0))))'
         row[34] = f'=IF(AG{last_row}="", "", AG{last_row} - AF{last_row})'
         row[35] = f'=IF(MATCH(B{last_row}, B$2:B{last_row}, 0) = ROW()-1,IF(AK{last_row} <> "", AK{last_row},IFNA(INDEX(lab_data!L:L,MATCH(1,(lab_data!A:A = B{last_row}) *(lab_data!E:E = MAX(FILTER(lab_data!E:E,(lab_data!A:A = B{last_row}) *(lab_data!E:E <= F{last_row}) *(lab_data!E:E >= F{last_row} - 90) *(lab_data!L:L <> "")))),0)), "")),INDEX(AJ$2:AJ{last_row-1}, MATCH(B{last_row}, B$2:B{last_row-1}, 0)))'
         row[36] = f'=IFNA(INDEX(lab_data!L:L, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!L:L <> "")))) * (lab_data!L:L <> ""), 0)), "")'
-        row[37] = f'=IFNA(IF(AK{last_row}="", "", INDEX(lab_data!L:L, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!L:L <> "")))) * (lab_data!L:L <> ""), 0)))-INDEX(lab_data!L:L, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = LARGE(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 90) * (lab_data!L:L <> "")),2)) * (lab_data!L:L <> ""), 0)))'
+        row[37] = f'=IFNA(IF(AK{last_row}="", "", INDEX(lab_data!L:L, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!L:L <> "")))) * (lab_data!L:L <> ""), 0))-INDEX(lab_data!L:L, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = LARGE(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 90) * (lab_data!L:L <> "")),2)) * (lab_data!L:L <> ""), 0))))'
         row[38] = f'=IF(AK{last_row}="", "", AK{last_row} - AJ{last_row})'
         row[39] = f'=IF(MATCH(B{last_row}, B$2:B{last_row}, 0) = ROW()-1,IF(AO{last_row} <> "", AO{last_row},IFNA(INDEX(lab_data!M:M,MATCH(1,(lab_data!A:A = B{last_row}) *(lab_data!E:E = MAX(FILTER(lab_data!E:E,(lab_data!A:A = B{last_row}) *(lab_data!E:E <= F{last_row}) *(lab_data!E:E >= F{last_row} - 90) *(lab_data!M:M <> "")))),0)), "")),INDEX(AN$2:AN{last_row-1}, MATCH(B{last_row}, B$2:B{last_row-1}, 0)))'
         row[40] = f'=IFNA(INDEX(lab_data!M:M, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!M:M <> "")))) * (lab_data!M:M <> ""), 0)), "")'
-        row[41] = f'=IFNA(IF(AO{last_row}="", "", INDEX(lab_data!M:M, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!M:M <> "")))) * (lab_data!M:M <> ""), 0)))-INDEX(lab_data!M:M, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = LARGE(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 90) * (lab_data!M:M <> "")),2)) * (lab_data!M:M <> ""), 0)))'
+        row[41] = f'=IFNA(IF(AO{last_row}="", "", INDEX(lab_data!M:M, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!M:M <> "")))) * (lab_data!M:M <> ""), 0))-INDEX(lab_data!M:M, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = LARGE(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 90) * (lab_data!M:M <> "")),2)) * (lab_data!M:M <> ""), 0))))'
         row[42] = f'=IF(AO{last_row}="", "", AO{last_row} - AN{last_row})'
         row[43] = f'=IF(MATCH(B{last_row}, B$2:B{last_row}, 0) = ROW()-1,IF(AS{last_row} <> "", AS{last_row},IFNA(INDEX(lab_data!N:N,MATCH(1,(lab_data!A:A = B{last_row}) *(lab_data!E:E = MAX(FILTER(lab_data!E:E,(lab_data!A:A = B{last_row}) *(lab_data!E:E <= F{last_row}) *(lab_data!E:E >= F{last_row} - 90) *(lab_data!N:N <> "")))),0)), "")),INDEX(AR$2:AR{last_row-1}, MATCH(B{last_row}, B$2:B{last_row-1}, 0)))'
         row[44] = f'=IFNA(INDEX(lab_data!N:N, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!N:N <> "")))) * (lab_data!N:N <> ""), 0)), "")'
-        row[45] = f'=IFNA(IF(AS{last_row}="", "", INDEX(lab_data!N:N, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!N:N <> "")))) * (lab_data!N:N <> ""), 0)))-INDEX(lab_data!N:N, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = LARGE(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 90) * (lab_data!N:N <> "")),2)) * (lab_data!N:N <> ""), 0)))'
+        row[45] = f'=IFNA(IF(AS{last_row}="", "", INDEX(lab_data!N:N, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!N:N <> "")))) * (lab_data!N:N <> ""), 0))-INDEX(lab_data!N:N, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = LARGE(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 90) * (lab_data!N:N <> "")),2)) * (lab_data!N:N <> ""), 0))))'
         row[46] = f'=IF(AS{last_row}="", "", AS{last_row} - AR{last_row})'
         row[52] = f'=IFNA(IF(MAX(FILTER(lab_data!H:H, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 14)))=0, "", MAX(FILTER(lab_data!H:H, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 14)))), "")'
         row[53] = f'=IF(BA{last_row}="", "", IF(D{last_row}=0, IF(BA{last_row}<=0.7, 141*((BA{last_row}/0.7)^-0.329)*0.993^E{last_row}*1.018, 141*((BA{last_row}/0.7)^-1.209)*0.993^E{last_row}*1.018), IF(BA{last_row}<=0.9, 141*((BA{last_row}/0.9)^-0.411)*0.993^E{last_row}, 141*((BA{last_row}/0.9)^-1.209)*0.993^E{last_row})))'
@@ -152,13 +265,6 @@ if st.button("Predict"):
 
     st.success("✅ Data submitted successfully!")
 
-    target_columns = [
-    'id_no', 'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
-    'average_cis_cum_dose', 'carb_cum_dose', 'baseline_hemoglobin',
-    'baseline_bun', 'baseline_bun/scr', 'baseline_egfr', 'baseline_sodium',
-    'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
-    'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history']
-
     # 讀取整張表格（包含公式的計算結果）
     raw_values = sheet.get_all_values()
     
@@ -192,10 +298,39 @@ if st.button("Predict"):
     st.write("Input data to feed into LSTM model:")
     st.dataframe(input_data)
 
+    #加上akd
+    input_data.loc[input_data.index[-1], 'akd'] = 0
+
+    #進行imputation和scaler
+    X_test, y_test = preprocessing(
+    data=input_data,
+    scaler=normalizer,
+    imputer=miceforest,
+    cols_for_preprocessing=cols_for_preprocessing,
+    groupby_col='id_no',
+    selected_features=selected_features,
+    outcome='akd',
+    maxlen=6)
+
+    X_test_2d = np.squeeze(X_test)  # shape (6, 39)
+    X_test_df = pd.DataFrame(X_test_2d)
+    st.write("X_test:", X_test_df)
+    
+    # 计算权重，忽略 padding 部分
+    sample_weight = (y_test != -1).astype(float).flatten()
+    
+    # 预测概率
+    y_prob = model.predict(X_test)
+    y_prob = y_prob.squeeze().flatten()
+
+    # 过滤掉 padding 数据
+    valid_indices = sample_weight > 0
+    flat_prob = y_prob[valid_indices]
+    st.write(flat_prob)
+
 
 
 st.subheader("Predicted Risk:")
-st.write("📊 (模型預測結果顯示區域，未來可填入模型輸出)")
 
 # --- 第二個 UI (檢驗數據) ---
 st.title("Laboratory Data Entry")
