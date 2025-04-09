@@ -333,8 +333,7 @@ if st.button("Predict"):
     valid_indices = sample_weight > 0
     flat_prob = y_prob[valid_indices]
     last_prob = flat_prob[-1] * 100
-    st.write(last_prob)
-    st.markdown(f"### 🧠 Predicted AKI Risk: **{last_prob:.2f}%**")
+    st.subheader(f"Predicted Risk: {last_prob:.2f}%")
 
 # --- 第二個 UI (檢驗數據) ---
 st.title("Laboratory Data Entry")
