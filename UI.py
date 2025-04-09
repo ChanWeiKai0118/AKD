@@ -259,6 +259,7 @@ if mode == "Predict mode":
         
     if st.button("Predict"):
         treatment_date_str = treatment_date.strftime("%Y/%m/%d")
+        number = str(number).zfill(8)  # 強制補滿8位數
         chemo_data_list = [
             number, gender_value, weight, age, treatment_date_str,
             cycle_no, cis_dose, carb_dose, aki_history  # 注意這裡保留 bool (True/False)
