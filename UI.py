@@ -245,10 +245,10 @@ number = st.text_input("Patient ID (chemotherapy data)", key="patient_id")
 # 按鈕：切換模式
 col_btn1, col_btn2 = st.columns(2)
 with col_btn1:
-    if st.button("preview"):
+    if st.button("Preview mode"):
         st.session_state.mode = 'preview'
 with col_btn2:
-    if st.button("Predict"):
+    if st.button("Predict mode"):
         st.session_state.mode = 'predict'
 
 # 顯示不同區塊
