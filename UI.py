@@ -359,7 +359,6 @@ elif mode == "Preview mode":
                 # 👉 將 Number 欄位全部轉成補滿8位的字串格式
                 filtered_df['Number'] = filtered_df['Number'].astype(str).str.zfill(8)
                 filtered_df = filtered_df[filtered_df['Number'] == number_preview]
-                st.dataframe(filtered_df)
                 
                 if not filtered_df.empty:
                     st.subheader(f"Patient information（ID: {number_preview}）")
@@ -411,8 +410,9 @@ elif mode == "Check mode":
                 df = pd.DataFrame(all_data)
                 preview_cols = ['Number', 'weight', 'Date','Scr','BUN','Hb','N','K']
                 filtered_df = df[preview_cols]
+                # 👉 將 Number 欄位全部轉成補滿8位的字串格式
+                filtered_df['Number'] = filtered_df['Number'].astype(str).str.zfill(8)
                 filtered_df = filtered_df[filtered_df['Number'] == number_preview]
-                st.dataframe(filtered_df)
                 
                 if not filtered_df.empty:
                     st.subheader(f"Patient information（ID: {number_check}）")
