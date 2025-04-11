@@ -372,7 +372,7 @@ elif mode == "Check mode":
 
 # --- 第二個 UI (檢驗數據) ---
 st.title("Laboratory Data Entry")
-mode = st.radio("Select mode", options=["Input data mode", "Check mode"], horizontal=True)
+mode = st.radio("Select mode", options=["Input data mode", "Check data mode"], horizontal=True)
 # 輸入模式
 if mode == "Input data mode":
     st.subheader("🔮 Input data Mode")
@@ -397,8 +397,8 @@ if mode == "Input data mode":
         st.success("✅ Laboratory data submitted successfully!")
 # -----------------------------
 # 預覽模式
-elif mode == "Check mode":
-    st.subheader("🗂️ Check Mode")
+elif mode == "Check data mode":
+    st.subheader("🗂️ Check Data Mode")
     number_check = st.text_input("Input patient ID", key="check_id")
     number_check = str(number_check).zfill(8)  # 強制補滿8位數
     if st.button("Check Lab Data"):
