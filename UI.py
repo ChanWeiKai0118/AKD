@@ -374,23 +374,53 @@ elif mode == "Preview mode":
 
 # --- 第二個 UI (檢驗數據) ---
 st.title("Laboratory Data Entry")
-
-col3, col4 = st.columns(2)
-
-with col3:
-    lab_number = st.text_input("Patient ID (lab data)")
-    weight_lab = st.number_input("Weight (kg) - Lab", min_value=0.0, format="%.1f")
-    lab_date = st.date_input("Date", datetime.date.today())
-
-with col4:
-    bun = st.number_input("BUN", min_value=0.0, value=None)
-    scr = st.number_input("Scr", min_value=0.00, format="%.2f", value=None)
-    hgb = st.number_input("Hgb", min_value=0.0, format="%.1f", value=None)
-    sodium = st.number_input("Sodium (N)", min_value=0, value=None)
-    potassium = st.number_input("Potassium (K)", min_value=0, value=None)
-
-if st.button("Submit Lab Data"):
-    lab_date_str = lab_date.strftime("%Y/%m/%d")
-    lab_data_list = [lab_number, weight_lab, lab_date_str, bun or "", scr or "", hgb or "", sodium or "", potassium or ""]
-    save_to_gsheet(lab_data_list, "lab_data")
-    st.success("✅ Laboratory data submitted successfully!")
+mode = st.radio("Select lab mode", options=["Input data mode", "Check mode"], horizontal=True)
+# 輸入模式
+if mode == "Predict mode":
+    st.subheader("🔮 Input data Mode")
+    col3, col4 = st.columns(2)
+    
+    with col3:
+        lab_number = st.text_input("Patient ID (lab data)")
+        weight_lab = st.number_input("Weight (kg) - Lab", min_value=0.0, format="%.1f")
+        lab_date = st.date_input("Date", datetime.date.today())
+    
+    with col4:
+        bun = st.number_input("BUN", min_value=0.0, value=None)
+        scr = st.number_input("Scr", min_value=0.00, format="%.2f", value=None)
+        hgb = st.number_input("Hgb", min_value=0.0, format="%.1f", value=None)
+        sodium = st.number_input("Sodium (N)", min_value=0, value=None)
+        potassium = st.number_input("Potassium (K)", min_value=0, value=None)
+    
+    if st.button("Submit Lab Data"):
+        lab_date_str = lab_date.strftime("%Y/%m/%d")
+        lab_data_list = [lab_number, weight_lab, lab_date_str, bun or "", scr or "", hgb or "", sodium or "", potassium or ""]
+        save_to_gsheet(lab_data_list, "lab_data")
+        st.success("✅ Laboratory data submitted successfully!")
+# -----------------------------
+# 預覽模式
+elif mode == "Check mode":
+    st.subheader("🗂️ Check Mode")
+    number_check = st.text_input("Input patient ID", key="check_id")
+    number_check = str(number_check).zfill(8)  # 強制補滿8位數
+    if st.button("Check Lab Data"):
+        if number_check:
+            try:
+                client = get_gsheet_client()
+                sheet = client.open("web data").worksheet("lab_data")
+                all_data = sheet.get_all_records()
+                df = pd.DataFrame(all_data)
+                preview_cols = ['Number', 'weight', 'Date','Scr','BUN','Hb','N','K']
+                filtered_df = df[preview_cols]
+                filtered_df = filtered_df[filtered_df['Number'] == number_preview]
+                st.dataframe(filtered_df)
+                
+                if not filtered_df.empty:
+                    st.subheader(f"Patient information（ID: {number_check}）")
+                    st.dataframe(filtered_df)
+                else:
+                    st.info("❗ The patient has no lab data")
+            except Exception as e:
+                st.error(f"Something wrong when loading Google Sheet ：{e}")
+        else:
+            st.warning("Please enter patient ID")
