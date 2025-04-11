@@ -239,7 +239,7 @@ def save_to_gsheet(data, sheet_name):
 # --- Streamlit UI ---
 st.title("Chemotherapy Data Entry")
 
-mode = st.radio("Select mode", options=["Predict mode", "Preview mode"], horizontal=True)
+mode = st.radio("Select mode", options=["Predict mode", "Check mode"], horizontal=True)
 
 # 預測模式
 if mode == "Predict mode":
@@ -343,8 +343,8 @@ if mode == "Predict mode":
         st.subheader(f"Predicted Risk: {last_prob:.2f}%")
 # -----------------------------
 # 預覽模式
-elif mode == "Preview mode":
-    st.subheader("🗂️ Preview Mode")
+elif mode == "Check mode":
+    st.subheader("🗂️ Check Mode")
     number_preview = st.text_input("Input patient ID", key="preview_id")
     number_preview = str(number_preview).zfill(8)  # 強制補滿8位數
     if st.button("Check"):
