@@ -270,8 +270,7 @@ if mode == "Predict mode":
     
         # 回傳資料行、AKI 判定結果、病人 ID
         row_to_write = save_to_gsheet(chemo_data_list, "chemo_data")
-        row_to_write[1] = number
-        st.write(row_to_write[1],number)
+
         # 這裡才送出資料
         sheet = get_gsheet_client().open("web data").worksheet("chemo_data")
         sheet.append_row(row_to_write, value_input_option="USER_ENTERED")
@@ -357,6 +356,8 @@ elif mode == "Preview mode":
                 df = pd.DataFrame(all_data)
                 preview_cols = ['Number', 'weight', 'sex_male', 'age', 'Index_date 1(dose)', 'cis_cycle', 'carb_cycle', 'cis_dose','carb_dose','aki_history']
                 filtered_df = df[preview_cols]
+                # 👉 將 Number 欄位全部轉成補滿8位的字串格式
+                filtered_df['Number'] = filtered_df['Number'].astype(str).str.zfill(8)
                 filtered_df = filtered_df[filtered_df['Number'] == number_preview]
                 st.dataframe(filtered_df)
                 
