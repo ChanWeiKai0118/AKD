@@ -239,7 +239,7 @@ def save_to_gsheet(data, sheet_name):
 # --- Streamlit UI ---
 st.title("Chemotherapy Data Entry")
 
-mode = st.radio("Select mode", options=["Predict mode", "Preview mode"], horizontal=True)
+mode = st.radio("Select mode", options=["Predict mode", "Check mode"], horizontal=True)
 
 # 預測模式
 if mode == "Predict mode":
@@ -343,8 +343,8 @@ if mode == "Predict mode":
         st.subheader(f"Predicted Risk: {last_prob:.2f}%")
 # -----------------------------
 # 預覽模式
-elif mode == "Preview mode":
-    st.subheader("🗂️ Preview Mode")
+elif mode == "Check mode":
+    st.subheader("🗂️ Check Mode")
     number_preview = st.text_input("Input patient ID", key="preview_id")
     number_preview = str(number_preview).zfill(8)  # 強制補滿8位數
     if st.button("Check"):
@@ -372,7 +372,7 @@ elif mode == "Preview mode":
 
 # --- 第二個 UI (檢驗數據) ---
 st.title("Laboratory Data Entry")
-mode = st.radio("Select mode", options=["Input data mode", "Check mode"], horizontal=True)
+mode = st.radio("Select mode", options=["Input data mode", "Check data mode"], horizontal=True)
 # 輸入模式
 if mode == "Input data mode":
     st.subheader("🔮 Input data Mode")
@@ -395,10 +395,14 @@ if mode == "Input data mode":
         lab_data_list = [lab_number, weight_lab, lab_date_str, bun or "", scr or "", hgb or "", sodium or "", potassium or ""]
         save_to_gsheet(lab_data_list, "lab_data")
         st.success("✅ Laboratory data submitted successfully!")
+        # 👉 顯示剛剛輸入的資料
+        lab_df = pd.DataFrame([lab_data_list], columns=['Number', 'Weight', 'Date','Scr','BUN','Hb','Na','K'])
+        st.subheader("🧾 Submitted Data")
+        st.dataframe(lab_df)
 # -----------------------------
 # 預覽模式
-elif mode == "Check mode":
-    st.subheader("🗂️ Check Mode")
+elif mode == "Check data mode":
+    st.subheader("🗂️ Check Data Mode")
     number_check = st.text_input("Input patient ID", key="check_id")
     number_check = str(number_check).zfill(8)  # 強制補滿8位數
     if st.button("Check Lab Data"):
