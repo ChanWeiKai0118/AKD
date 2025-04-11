@@ -408,7 +408,7 @@ elif mode == "Check mode":
                 sheet = client.open("web data").worksheet("lab_data")
                 all_data = sheet.get_all_records()
                 df = pd.DataFrame(all_data)
-                preview_cols = ['Number', 'weight', 'Date','Scr','BUN','Hb','N','K']
+                preview_cols = ['Number', 'Weight', 'Date','Scr','BUN','Hb','Na','K']
                 filtered_df = df[preview_cols]
                 # 👉 將 Number 欄位全部轉成補滿8位的字串格式
                 filtered_df['Number'] = filtered_df['Number'].astype(str).str.zfill(8)
