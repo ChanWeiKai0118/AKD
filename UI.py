@@ -412,7 +412,7 @@ elif mode == "Check mode":
                 filtered_df = df[preview_cols]
                 # 👉 將 Number 欄位全部轉成補滿8位的字串格式
                 filtered_df['Number'] = filtered_df['Number'].astype(str).str.zfill(8)
-                filtered_df = filtered_df[filtered_df['Number'] == number_preview]
+                filtered_df = filtered_df[filtered_df['Number'] == number_check]
                 
                 if not filtered_df.empty:
                     st.subheader(f"Patient information（ID: {number_check}）")
