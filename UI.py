@@ -17,9 +17,6 @@ from keras.models import load_model
 
 import tensorflow as tf
 
-st.sidebar.markdown("## ⚙️ 套件版本")
-st.sidebar.write("**TensorFlow version:**", tf.__version__)
-st.sidebar.write("**scikit-learn version:**", sklearn.__version__)
 
 #超重要，model的threshold
 optimal_threshold = 0.29
