@@ -371,9 +371,9 @@ elif mode == "Preview mode":
 
 # --- 第二個 UI (檢驗數據) ---
 st.title("Laboratory Data Entry")
-mode = st.radio("Select lab mode", options=["Input data mode", "Check mode"], horizontal=True)
+mode = st.radio("Select mode", options=["Input data mode", "Check mode"], horizontal=True)
 # 輸入模式
-if mode == "Predict mode":
+if mode == "Input data mode":
     st.subheader("🔮 Input data Mode")
     col3, col4 = st.columns(2)
     
