@@ -395,7 +395,10 @@ if mode == "Input data mode":
         lab_data_list = [lab_number, weight_lab, lab_date_str, bun or "", scr or "", hgb or "", sodium or "", potassium or ""]
         save_to_gsheet(lab_data_list, "lab_data")
         st.success("✅ Laboratory data submitted successfully!")
-        st.dataframe(lab_data_list)
+        # 👉 顯示剛剛輸入的資料
+        lab_df = pd.DataFrame([lab_data_list], columns=['Number', 'Weight', 'Date','Scr','BUN','Hb','Na','K'])
+        st.subheader("🧾 Submitted Data")
+        st.dataframe(lab_df)
 # -----------------------------
 # 預覽模式
 elif mode == "Check data mode":
