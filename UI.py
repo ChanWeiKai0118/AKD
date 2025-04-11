@@ -395,6 +395,7 @@ if mode == "Input data mode":
         lab_data_list = [lab_number, weight_lab, lab_date_str, bun or "", scr or "", hgb or "", sodium or "", potassium or ""]
         save_to_gsheet(lab_data_list, "lab_data")
         st.success("✅ Laboratory data submitted successfully!")
+        st.dataframe(lab_data_list)
 # -----------------------------
 # 預覽模式
 elif mode == "Check data mode":
