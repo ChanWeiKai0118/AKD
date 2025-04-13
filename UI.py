@@ -236,7 +236,65 @@ def save_to_gsheet(data, sheet_name):
         sheet.append_row(row, value_input_option="USER_ENTERED")
 
 
-# --- Streamlit UI ---
+# --- 第一個 Streamlit UI (檢驗數據) ---
+st.title("Laboratory Data Entry")
+mode = st.radio("Select mode", options=["Input data mode", "Check data mode"], horizontal=True)
+# 輸入模式
+if mode == "Input data mode":
+    st.subheader("🔮 Input data Mode")
+    col3, col4 = st.columns(2)
+    
+    with col3:
+        lab_number = st.text_input("Patient ID (lab data)")
+        weight_lab = st.number_input("Weight (kg) - Lab", min_value=0.0, format="%.1f")
+        lab_date = st.date_input("Date", datetime.date.today())
+    
+    with col4:
+        bun = st.number_input("BUN", min_value=0.0, value=None)
+        scr = st.number_input("Scr", min_value=0.00, format="%.2f", value=None)
+        hgb = st.number_input("Hgb", min_value=0.0, format="%.1f", value=None)
+        sodium = st.number_input("Sodium (N)", min_value=0, value=None)
+        potassium = st.number_input("Potassium (K)", min_value=0, value=None)
+    
+    if st.button("Submit Lab Data"):
+        lab_date_str = lab_date.strftime("%Y/%m/%d")
+        lab_data_list = [lab_number, weight_lab, lab_date_str, bun or "", scr or "", hgb or "", sodium or "", potassium or ""]
+        save_to_gsheet(lab_data_list, "lab_data")
+        st.success("✅ Laboratory data submitted successfully!")
+        # 👉 顯示剛剛輸入的資料
+        lab_df = pd.DataFrame([lab_data_list], columns=['Number', 'Weight', 'Date','Scr','BUN','Hb','Na','K'])
+        st.subheader("🧾 Submitted Data")
+        st.dataframe(lab_df)
+# -----------------------------
+# 預覽模式
+elif mode == "Check data mode":
+    st.subheader("🗂️ Check Data Mode")
+    number_check = st.text_input("Input patient ID", key="check_id")
+    number_check = str(number_check).zfill(8)  # 強制補滿8位數
+    if st.button("Check Lab Data"):
+        if number_check:
+            try:
+                client = get_gsheet_client()
+                sheet = client.open("web data").worksheet("lab_data")
+                all_data = sheet.get_all_records()
+                df = pd.DataFrame(all_data)
+                preview_cols = ['Number', 'Weight', 'Date','Scr','BUN','Hb','Na','K']
+                filtered_df = df[preview_cols]
+                # 👉 將 Number 欄位全部轉成補滿8位的字串格式
+                filtered_df['Number'] = filtered_df['Number'].astype(str).str.zfill(8)
+                filtered_df = filtered_df[filtered_df['Number'] == number_check]
+                
+                if not filtered_df.empty:
+                    st.subheader(f"Patient information（ID: {number_check}）")
+                    st.dataframe(filtered_df)
+                else:
+                    st.info("❗ The patient has no lab data")
+            except Exception as e:
+                st.error(f"Something wrong when loading Google Sheet ：{e}")
+        else:
+            st.warning("Please enter patient ID")
+
+# ---第二個 Streamlit UI ---
 st.title("Chemotherapy Data Entry")
 
 mode = st.radio("Select mode", options=["Predict mode", "Check mode"], horizontal=True)
@@ -365,64 +423,6 @@ elif mode == "Check mode":
                     st.dataframe(filtered_df)
                 else:
                     st.info("❗ The patient has no chemotherapy data")
-            except Exception as e:
-                st.error(f"Something wrong when loading Google Sheet ：{e}")
-        else:
-            st.warning("Please enter patient ID")
-
-# --- 第二個 UI (檢驗數據) ---
-st.title("Laboratory Data Entry")
-mode = st.radio("Select mode", options=["Input data mode", "Check data mode"], horizontal=True)
-# 輸入模式
-if mode == "Input data mode":
-    st.subheader("🔮 Input data Mode")
-    col3, col4 = st.columns(2)
-    
-    with col3:
-        lab_number = st.text_input("Patient ID (lab data)")
-        weight_lab = st.number_input("Weight (kg) - Lab", min_value=0.0, format="%.1f")
-        lab_date = st.date_input("Date", datetime.date.today())
-    
-    with col4:
-        bun = st.number_input("BUN", min_value=0.0, value=None)
-        scr = st.number_input("Scr", min_value=0.00, format="%.2f", value=None)
-        hgb = st.number_input("Hgb", min_value=0.0, format="%.1f", value=None)
-        sodium = st.number_input("Sodium (N)", min_value=0, value=None)
-        potassium = st.number_input("Potassium (K)", min_value=0, value=None)
-    
-    if st.button("Submit Lab Data"):
-        lab_date_str = lab_date.strftime("%Y/%m/%d")
-        lab_data_list = [lab_number, weight_lab, lab_date_str, bun or "", scr or "", hgb or "", sodium or "", potassium or ""]
-        save_to_gsheet(lab_data_list, "lab_data")
-        st.success("✅ Laboratory data submitted successfully!")
-        # 👉 顯示剛剛輸入的資料
-        lab_df = pd.DataFrame([lab_data_list], columns=['Number', 'Weight', 'Date','Scr','BUN','Hb','Na','K'])
-        st.subheader("🧾 Submitted Data")
-        st.dataframe(lab_df)
-# -----------------------------
-# 預覽模式
-elif mode == "Check data mode":
-    st.subheader("🗂️ Check Data Mode")
-    number_check = st.text_input("Input patient ID", key="check_id")
-    number_check = str(number_check).zfill(8)  # 強制補滿8位數
-    if st.button("Check Lab Data"):
-        if number_check:
-            try:
-                client = get_gsheet_client()
-                sheet = client.open("web data").worksheet("lab_data")
-                all_data = sheet.get_all_records()
-                df = pd.DataFrame(all_data)
-                preview_cols = ['Number', 'Weight', 'Date','Scr','BUN','Hb','Na','K']
-                filtered_df = df[preview_cols]
-                # 👉 將 Number 欄位全部轉成補滿8位的字串格式
-                filtered_df['Number'] = filtered_df['Number'].astype(str).str.zfill(8)
-                filtered_df = filtered_df[filtered_df['Number'] == number_check]
-                
-                if not filtered_df.empty:
-                    st.subheader(f"Patient information（ID: {number_check}）")
-                    st.dataframe(filtered_df)
-                else:
-                    st.info("❗ The patient has no lab data")
             except Exception as e:
                 st.error(f"Something wrong when loading Google Sheet ：{e}")
         else:
