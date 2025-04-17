@@ -32,8 +32,6 @@ def get_model():
     model = load_model("AKD-LSTM.keras", compile=False)
     return model
 
-model = get_model()
-
 # Load the AKD scaler
 @st.cache_resource
 def get_scaler():
@@ -43,8 +41,6 @@ def get_scaler():
         scaler_file.write(scaler_response.content)
     return joblib.load("akd_scaler.pkl")
 
-normalizer = get_scaler()
-
 # Load the AKD imputation
 @st.cache_resource
 def get_imputer():
@@ -53,9 +49,6 @@ def get_imputer():
     z = zipfile.ZipFile(io.BytesIO(r.content))
     z.extractall(".")
     return joblib.load("akd_miceforest.pkl")
-
-miceforest = get_imputer()
-
 
 # Load the AKI model
 @st.cache_resource
@@ -67,8 +60,6 @@ def get_aki_model():
     model = load_model("AKI-LSTM.keras", compile=False)
     return model
 
-aki_model = get_aki_model()
-
 # Load the AKI scaler
 @st.cache_resource
 def get_aki_scaler():
@@ -78,8 +69,6 @@ def get_aki_scaler():
         aki_scaler_file.write(aki_scaler_response.content)
     return joblib.load("aki_scaler.pkl")
 
-aki_normalizer = get_aki_scaler()
-
 # Load the AKI imputation
 @st.cache_resource
 def get_aki_imputer():
@@ -88,8 +77,6 @@ def get_aki_imputer():
     aki_z = zipfile.ZipFile(io.BytesIO(aki_r.content))
     aki_z.extractall(".")
     return joblib.load("aki_miceforest.pkl")
-
-aki_miceforest = get_aki_imputer()
 
 #AKD columns
 target_columns = [
@@ -482,6 +469,8 @@ elif mode == "AKD prediction":
                         input_data.loc[input_data.index[-1], 'akd'] = 0
                         
                         #進行imputation和scaler
+                        normalizer = get_scaler()
+                        miceforest = get_imputer()
                         X_test, y_test = preprocessing(
                             data=input_data,
                             scaler=normalizer,
@@ -493,6 +482,7 @@ elif mode == "AKD prediction":
                             maxlen=6
                         )
                         # 预测概率
+                        model = get_model()
                         y_prob = model.predict(X_test).squeeze().flatten()
                         
                         # 过滤掉 padding 数据
@@ -553,6 +543,8 @@ elif mode == "AKI prediction":
                         input_data.loc[input_data.index[-1], 'aki'] = 0
                         
                         #進行imputation和scaler
+                        aki_normalizer = get_aki_scaler()
+                        aki_miceforest = get_aki_imputer()
                         X_test, y_test = preprocessing(
                             data=input_data,
                             scaler=aki_normalizer,
@@ -564,6 +556,7 @@ elif mode == "AKI prediction":
                             maxlen=6
                         )
                         # 预测概率
+                        aki_model = get_aki_model()
                         y_prob = aki_model.predict(X_test).squeeze().flatten()
                         
                         # 过滤掉 padding 数据
