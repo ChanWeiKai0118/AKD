@@ -425,64 +425,64 @@ elif mode == "AKD prediction":
         input_date = st.date_input("Treatment Date", datetime.date.today())
         input_date_str = input_date.strftime("%Y/%m/%d")
         if input_number and input_date_str:
-    try:
-
-        # === Step 2: 讀取 Google Sheet 資料 ===
-        raw_values = sheet.get_all_values()
-        headers = raw_values[0]
-        data = raw_values[1:]
-        df = pd.DataFrame(data, columns=headers)
-
-        # === Step 3: 找到該筆 row ===
-        df_patient = df[df['Number'] == input_number]
-        df_patient = df_patient.sort_values(by='Index_date 1(dose)')
-
-        # 找到最接近輸入日期的 row（可根據 exact match 或最近的）
-        selected_row = df_patient[df_patient['Index_date 1(dose)'] == input_date_str]
-
-        if selected_row.empty:
-            st.warning("No exact match found for this date. Please check again.")
-        else:
-            target_index = selected_row.index[0]
-            selected_rows = df_patient.loc[:target_index].tail(6)
-
-            # 顯示預測用資料
-            st.subheader("Data for Prediction")
-            st.dataframe(selected_rows)
-
-            # Step 4: 準備輸入模型資料
-            input_data = selected_rows[target_columns]
-            # 轉成數值型，非數字會變 NaN
-            input_data = input_data.apply(pd.to_numeric, errors='coerce')
-            input_data.reset_index(drop=True, inplace=True)
-            
-            #加上akd
-            input_data.loc[input_data.index[-1], 'akd'] = 0
-            
-            #進行imputation和scaler
-            X_test, y_test = preprocessing(
-                data=input_data,
-                scaler=normalizer,
-                imputer=miceforest,
-                cols_for_preprocessing=cols_for_preprocessing,
-                groupby_col='id_no',  # or 'Number' if that's what you use
-                selected_features=selected_features,
-                outcome='akd',
-                maxlen=6
-            )
-            # 预测概率
-            y_prob = model.predict(X_test).squeeze().flatten()
-            
-            # 过滤掉 padding 数据
-            sample_weight = (y_test != -1).astype(float).flatten()
-            valid_indices = sample_weight > 0
-            flat_prob = y_prob[valid_indices]
-            last_prob = flat_prob[-1] * 100
-
-            st.subheader(f"Predicted AKD Risk: {last_prob:.2f}%")
-
-    except Exception as e:
-        st.error(f"Error processing your request: {e}")
+            try:
+        
+                # === Step 2: 讀取 Google Sheet 資料 ===
+                raw_values = sheet.get_all_values()
+                headers = raw_values[0]
+                data = raw_values[1:]
+                df = pd.DataFrame(data, columns=headers)
+        
+                # === Step 3: 找到該筆 row ===
+                df_patient = df[df['Number'] == input_number]
+                df_patient = df_patient.sort_values(by='Index_date 1(dose)')
+        
+                # 找到最接近輸入日期的 row（可根據 exact match 或最近的）
+                selected_row = df_patient[df_patient['Index_date 1(dose)'] == input_date_str]
+        
+                if selected_row.empty:
+                    st.warning("No exact match found for this date. Please check again.")
+                else:
+                    target_index = selected_row.index[0]
+                    selected_rows = df_patient.loc[:target_index].tail(6)
+        
+                    # 顯示預測用資料
+                    st.subheader("Data for Prediction")
+                    st.dataframe(selected_rows)
+        
+                    # Step 4: 準備輸入模型資料
+                    input_data = selected_rows[target_columns]
+                    # 轉成數值型，非數字會變 NaN
+                    input_data = input_data.apply(pd.to_numeric, errors='coerce')
+                    input_data.reset_index(drop=True, inplace=True)
+                    
+                    #加上akd
+                    input_data.loc[input_data.index[-1], 'akd'] = 0
+                    
+                    #進行imputation和scaler
+                    X_test, y_test = preprocessing(
+                        data=input_data,
+                        scaler=normalizer,
+                        imputer=miceforest,
+                        cols_for_preprocessing=cols_for_preprocessing,
+                        groupby_col='id_no',  # or 'Number' if that's what you use
+                        selected_features=selected_features,
+                        outcome='akd',
+                        maxlen=6
+                    )
+                    # 预测概率
+                    y_prob = model.predict(X_test).squeeze().flatten()
+                    
+                    # 过滤掉 padding 数据
+                    sample_weight = (y_test != -1).astype(float).flatten()
+                    valid_indices = sample_weight > 0
+                    flat_prob = y_prob[valid_indices]
+                    last_prob = flat_prob[-1] * 100
+        
+                    st.subheader(f"Predicted AKD Risk: {last_prob:.2f}%")
+        
+            except Exception as e:
+                st.error(f"Error processing your request: {e}")
 
 # -----------------------------
 # AKI預測模式
@@ -492,61 +492,61 @@ elif mode == "AKI prediction":
         input_date_aki = st.date_input("Treatment Date", datetime.date.today())
         input_date_str = input_date_aki.strftime("%Y/%m/%d")
         if input_number and input_date_str:
-    try:
-
-        # === Step 2: 讀取 Google Sheet 資料 ===
-        raw_values = sheet.get_all_values()
-        headers = raw_values[0]
-        data = raw_values[1:]
-        df = pd.DataFrame(data, columns=headers)
-
-        # === Step 3: 找到該筆 row ===
-        df_patient = df[df['Number'] == input_number_aki]
-        df_patient = df_patient.sort_values(by='Index_date 1(dose)')
-
-        # 找到最接近輸入日期的 row（可根據 exact match 或最近的）
-        selected_row = df_patient[df_patient['Index_date 1(dose)'] == input_date_str]
-
-        if selected_row.empty:
-            st.warning("No exact match found for this date. Please check again.")
-        else:
-            target_index = selected_row.index[0]
-            selected_rows = df_patient.loc[:target_index].tail(6)
-
-            # 顯示預測用資料
-            st.subheader("Data for Prediction")
-            st.dataframe(selected_rows)
-
-            # Step 4: 準備輸入模型資料
-            input_data = selected_rows[aki_target_columns]
-            # 轉成數值型，非數字會變 NaN
-            input_data = input_data.apply(pd.to_numeric, errors='coerce')
-            input_data.reset_index(drop=True, inplace=True)
-            
-            #加上akd
-            input_data.loc[input_data.index[-1], 'aki'] = 0
-            
-            #進行imputation和scaler
-            X_test, y_test = preprocessing(
-                data=input_data,
-                scaler=aki_normalizer,
-                imputer=aki_miceforest,
-                cols_for_preprocessing=aki_cols_for_preprocessing,
-                groupby_col='id_no',  # or 'Number' if that's what you use
-                selected_features=aki_selected_features,
-                outcome='aki',
-                maxlen=6
-            )
-            # 预测概率
-            y_prob = aki_model.predict(X_test).squeeze().flatten()
-            
-            # 过滤掉 padding 数据
-            sample_weight = (y_test != -1).astype(float).flatten()
-            valid_indices = sample_weight > 0
-            flat_prob = y_prob[valid_indices]
-            last_prob = flat_prob[-1] * 100
-
-            st.subheader(f"Predicted AKI Risk: {last_prob:.2f}%")
-
-    except Exception as e:
-        st.error(f"Error processing your request: {e}")
+            try:
+        
+                # === Step 2: 讀取 Google Sheet 資料 ===
+                raw_values = sheet.get_all_values()
+                headers = raw_values[0]
+                data = raw_values[1:]
+                df = pd.DataFrame(data, columns=headers)
+        
+                # === Step 3: 找到該筆 row ===
+                df_patient = df[df['Number'] == input_number_aki]
+                df_patient = df_patient.sort_values(by='Index_date 1(dose)')
+        
+                # 找到最接近輸入日期的 row（可根據 exact match 或最近的）
+                selected_row = df_patient[df_patient['Index_date 1(dose)'] == input_date_str]
+        
+                if selected_row.empty:
+                    st.warning("No exact match found for this date. Please check again.")
+                else:
+                    target_index = selected_row.index[0]
+                    selected_rows = df_patient.loc[:target_index].tail(6)
+        
+                    # 顯示預測用資料
+                    st.subheader("Data for Prediction")
+                    st.dataframe(selected_rows)
+        
+                    # Step 4: 準備輸入模型資料
+                    input_data = selected_rows[aki_target_columns]
+                    # 轉成數值型，非數字會變 NaN
+                    input_data = input_data.apply(pd.to_numeric, errors='coerce')
+                    input_data.reset_index(drop=True, inplace=True)
+                    
+                    #加上akd
+                    input_data.loc[input_data.index[-1], 'aki'] = 0
+                    
+                    #進行imputation和scaler
+                    X_test, y_test = preprocessing(
+                        data=input_data,
+                        scaler=aki_normalizer,
+                        imputer=aki_miceforest,
+                        cols_for_preprocessing=aki_cols_for_preprocessing,
+                        groupby_col='id_no',  # or 'Number' if that's what you use
+                        selected_features=aki_selected_features,
+                        outcome='aki',
+                        maxlen=6
+                    )
+                    # 预测概率
+                    y_prob = aki_model.predict(X_test).squeeze().flatten()
+                    
+                    # 过滤掉 padding 数据
+                    sample_weight = (y_test != -1).astype(float).flatten()
+                    valid_indices = sample_weight > 0
+                    flat_prob = y_prob[valid_indices]
+                    last_prob = flat_prob[-1] * 100
+        
+                    st.subheader(f"Predicted AKI Risk: {last_prob:.2f}%")
+        
+            except Exception as e:
+                st.error(f"Error processing your request: {e}")
