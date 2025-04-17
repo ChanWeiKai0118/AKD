@@ -23,6 +23,7 @@ AKD_optimal_threshold = 0.29
 AKI_optimal_threshold = 0.31
 
 # Load the AKD model
+@st.cache_resource
 def get_model():
     url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/AKD-LSTM.zip"
     response = requests.get(url)
@@ -33,7 +34,31 @@ def get_model():
 
 model = get_model()
 
+# Load the AKD scaler
+@st.cache_resource
+def get_scaler():
+    scaler_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_scaler.pkl"
+    scaler_response = requests.get(scaler_url)
+    with open("akd_scaler.pkl", "wb") as scaler_file:
+        scaler_file.write(scaler_response.content)
+    return joblib.load("akd_scaler.pkl")
+
+normalizer = get_scaler()
+
+# Load the AKD imputation
+@st.cache_resource
+def get_imputer():
+    url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_miceforest.zip"
+    r = requests.get(url)
+    z = zipfile.ZipFile(io.BytesIO(r.content))
+    z.extractall(".")
+    return joblib.load("akd_miceforest.pkl")
+
+miceforest = get_imputer()
+
+
 # Load the AKI model
+@st.cache_resource
 def get_aki_model():
     url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/AKI-LSTM.zip"
     response = requests.get(url)
@@ -44,34 +69,27 @@ def get_aki_model():
 
 aki_model = get_aki_model()
 
-# Load the AKD scaler
-scaler_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_scaler.pkl"
-scaler_response = requests.get(scaler_url)
-with open("akd_scaler.pkl", "wb") as scaler_file:
-    scaler_file.write(scaler_response.content)
-normalizer = joblib.load("akd_scaler.pkl")
-
 # Load the AKI scaler
-aki_scaler_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/aki_scaler.pkl"
-aki_scaler_response = requests.get(aki_scaler_url)
-with open("aki_scaler.pkl", "wb") as aki_scaler_file:
-    aki_scaler_file.write(aki_scaler_response.content)
-aki_normalizer = joblib.load("aki_scaler.pkl")
+@st.cache_resource
+def get_aki_scaler():
+    aki_scaler_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/aki_scaler.pkl"
+    aki_scaler_response = requests.get(aki_scaler_url)
+    with open("aki_scaler.pkl", "wb") as aki_scaler_file:
+        aki_scaler_file.write(aki_scaler_response.content)
+    return joblib.load("aki_scaler.pkl")
 
-
-# Load the AKD imputation
-url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_miceforest.zip"
-r = requests.get(url)
-z = zipfile.ZipFile(io.BytesIO(r.content))
-z.extractall(".")
-miceforest = joblib.load("akd_miceforest.pkl")
+aki_normalizer = get_aki_scaler()
 
 # Load the AKI imputation
-aki_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/aki_miceforest.zip"
-aki_r = requests.get(aki_url)
-aki_z = zipfile.ZipFile(io.BytesIO(aki_r.content))
-aki_z.extractall(".")
-aki_miceforest = joblib.load("aki_miceforest.pkl")
+@st.cache_resource
+def get_aki_imputer():
+    aki_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/aki_miceforest.zip"
+    aki_r = requests.get(aki_url)
+    aki_z = zipfile.ZipFile(io.BytesIO(aki_r.content))
+    aki_z.extractall(".")
+    return joblib.load("aki_miceforest.pkl")
+
+aki_miceforest = get_aki_imputer()
 
 #AKD columns
 target_columns = [
