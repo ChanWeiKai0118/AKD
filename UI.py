@@ -78,48 +78,6 @@ def get_aki_imputer():
     aki_z.extractall(".")
     return joblib.load("aki_miceforest.pkl")
 
-#AKD columns
-target_columns = [
-    'id_no', 'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
-    'average_cis_cum_dose', 'carb_cum_dose', 'baseline_hemoglobin',
-    'baseline_bun', 'baseline_bun/scr', 'baseline_egfr', 'baseline_sodium',
-    'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
-    'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history']
-cols_for_preprocessing = [
-    'id_no', 'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
-    'average_cis_cum_dose', 'carb_cum_dose', 'baseline_hemoglobin',
-    'baseline_bun', 'baseline_bun/scr', 'baseline_egfr', 'baseline_sodium',
-    'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
-    'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history',
-    'akd']
-selected_features = [
-    'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
-    'average_cis_cum_dose', 'carb_cum_dose', 'baseline_hemoglobin',
-    'baseline_bun', 'baseline_bun/scr', 'baseline_egfr', 'baseline_sodium',
-    'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
-    'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history']
-
-#AKI columns
-aki_target_columns = [
-    'id_no', 'age', 'cis_dose', 'cis_cum_dose', 'average_cis_cum_dose',
-    'carb_cum_dose', 'baseline_hemoglobin', 'baseline_bun/scr', 'baseline_egfr',
-    'baseline_sodium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
-    'latest_potassium', 'bun_change', 'bun/scr_change', 'crcl_change',
-    'bun/scr_slope', 'crcl_slope', 'aki_history']
-aki_cols_for_preprocessing = [
-    'id_no', 'age', 'cis_dose', 'cis_cum_dose', 'average_cis_cum_dose',
-    'carb_cum_dose', 'baseline_hemoglobin', 'baseline_bun/scr', 'baseline_egfr',
-    'baseline_sodium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
-    'latest_potassium', 'bun_change', 'bun/scr_change', 'crcl_change',
-    'bun/scr_slope', 'crcl_slope', 'aki_history', 'aki']
-aki_selected_features = [
-    'age', 'cis_dose', 'cis_cum_dose', 'average_cis_cum_dose',
-    'carb_cum_dose', 'baseline_hemoglobin', 'baseline_bun/scr', 'baseline_egfr',
-    'baseline_sodium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
-    'latest_potassium', 'bun_change', 'bun/scr_change', 'crcl_change',
-    'bun/scr_slope', 'crcl_slope', 'aki_history']
-
-
 def post_sequential_padding( # (for return_sequences True)
         data, groupby_col, selected_features, outcome, maxlen
     ):
@@ -324,10 +282,10 @@ if mode == "Input data mode":
 elif mode == "Check data mode":
     st.subheader("🗂️ Check Data Mode")
     number_check = st.text_input("Input patient ID", key="check_id")
-    number_check = str(number_check).zfill(8)  # 強制補滿8位數
     if st.button("Check Lab Data"):
         if number_check:
             try:
+                number_check = str(number_check).zfill(8)  # 強制補滿8位數
                 client = get_gsheet_client()
                 sheet = client.open("web data").worksheet("lab_data")
                 all_data = sheet.get_all_records()
@@ -399,8 +357,8 @@ if mode == "Input mode":
 elif mode == "Check mode":
     st.subheader("🗂️ Check Mode")
     number_preview = st.text_input("Input patient ID", key="preview_id")
-    number_preview = str(number_preview).zfill(8)  # 強制補滿8位數
     if st.button("Check"):
+        number_preview = str(number_preview).zfill(8)  # 強制補滿8位數
         if number_preview:
             try:
                 client = get_gsheet_client()
@@ -433,7 +391,26 @@ elif mode == "AKD prediction":
         if st.button("AKD prediction"):
             if input_number and input_date_str:
                 try:
-            
+                    #AKD columns
+                    target_columns = [
+                        'id_no', 'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
+                        'average_cis_cum_dose', 'carb_cum_dose', 'baseline_hemoglobin',
+                        'baseline_bun', 'baseline_bun/scr', 'baseline_egfr', 'baseline_sodium',
+                        'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
+                        'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history']
+                    cols_for_preprocessing = [
+                        'id_no', 'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
+                        'average_cis_cum_dose', 'carb_cum_dose', 'baseline_hemoglobin',
+                        'baseline_bun', 'baseline_bun/scr', 'baseline_egfr', 'baseline_sodium',
+                        'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
+                        'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history',
+                        'akd']
+                    selected_features = [
+                        'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
+                        'average_cis_cum_dose', 'carb_cum_dose', 'baseline_hemoglobin',
+                        'baseline_bun', 'baseline_bun/scr', 'baseline_egfr', 'baseline_sodium',
+                        'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
+                        'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history']
                     # === Step 2: 讀取 Google Sheet 資料 ===
                     client = get_gsheet_client()
                     sheet = client.open("web data").worksheet("chemo_data")
@@ -507,7 +484,25 @@ elif mode == "AKI prediction":
         if st.button("AKI prediction"):
             if input_number_aki and input_date_aki_str:
                 try:
-            
+                    #AKI columns
+                    aki_target_columns = [
+                        'id_no', 'age', 'cis_dose', 'cis_cum_dose', 'average_cis_cum_dose',
+                        'carb_cum_dose', 'baseline_hemoglobin', 'baseline_bun/scr', 'baseline_egfr',
+                        'baseline_sodium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
+                        'latest_potassium', 'bun_change', 'bun/scr_change', 'crcl_change',
+                        'bun/scr_slope', 'crcl_slope', 'aki_history']
+                    aki_cols_for_preprocessing = [
+                        'id_no', 'age', 'cis_dose', 'cis_cum_dose', 'average_cis_cum_dose',
+                        'carb_cum_dose', 'baseline_hemoglobin', 'baseline_bun/scr', 'baseline_egfr',
+                        'baseline_sodium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
+                        'latest_potassium', 'bun_change', 'bun/scr_change', 'crcl_change',
+                        'bun/scr_slope', 'crcl_slope', 'aki_history', 'aki']
+                    aki_selected_features = [
+                        'age', 'cis_dose', 'cis_cum_dose', 'average_cis_cum_dose',
+                        'carb_cum_dose', 'baseline_hemoglobin', 'baseline_bun/scr', 'baseline_egfr',
+                        'baseline_sodium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
+                        'latest_potassium', 'bun_change', 'bun/scr_change', 'crcl_change',
+                        'bun/scr_slope', 'crcl_slope', 'aki_history']
                     # === Step 2: 讀取 Google Sheet 資料 ===
                     client = get_gsheet_client()
                     sheet = client.open("web data").worksheet("chemo_data")
