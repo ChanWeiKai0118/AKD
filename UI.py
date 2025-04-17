@@ -494,10 +494,10 @@ elif mode == "AKI prediction":
         st.subheader("🔮 AKI prediction")    
         input_number_aki = st.text_input("Enter Patient ID (Number):")
         input_date_aki = st.date_input("Treatment Date", datetime.date.today())
-        input_date_str = input_date_aki.strftime("%Y/%m/%d")
+        input_date_aki_str = input_date_aki.strftime("%Y/%m/%d")
         
         if st.button("AKI prediction"):
-            if input_number and input_date_str:
+            if input_number_aki and input_date_aki_str:
                 try:
             
                     # === Step 2: 讀取 Google Sheet 資料 ===
@@ -513,7 +513,7 @@ elif mode == "AKI prediction":
                     df_patient = df_patient.sort_values(by='Index_date 1(dose)')
             
                     # 找到最接近輸入日期的 row（可根據 exact match 或最近的）
-                    selected_row = df_patient[df_patient['Index_date 1(dose)'] == input_date_str]
+                    selected_row = df_patient[df_patient['Index_date 1(dose)'] == input_date_aki_str]
             
                     if selected_row.empty:
                         st.warning("No exact match found for this date. Please check again.")
