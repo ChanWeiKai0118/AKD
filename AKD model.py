@@ -18,7 +18,7 @@ from keras.models import load_model
 import tensorflow as tf
 
 
-#超重要，model的threshold
+#model的threshold，目前沒用到
 AKD_optimal_threshold = 0.29
 AKI_optimal_threshold = 0.31
 
