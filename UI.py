@@ -430,6 +430,8 @@ elif mode == "AKD prediction":
                 try:
             
                     # === Step 2: 讀取 Google Sheet 資料 ===
+                    client = get_gsheet_client()
+                    sheet = client.open("web data").worksheet("chemo_data")
                     raw_values = sheet.get_all_values()
                     headers = raw_values[0]
                     data = raw_values[1:]
@@ -499,6 +501,8 @@ elif mode == "AKI prediction":
                 try:
             
                     # === Step 2: 讀取 Google Sheet 資料 ===
+                    client = get_gsheet_client()
+                    sheet = client.open("web data").worksheet("chemo_data")
                     raw_values = sheet.get_all_values()
                     headers = raw_values[0]
                     data = raw_values[1:]
