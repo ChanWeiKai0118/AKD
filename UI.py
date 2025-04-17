@@ -19,10 +19,10 @@ import tensorflow as tf
 
 
 #超重要，model的threshold
-optimal_threshold = 0.29
+AKD_optimal_threshold = 0.29
+AKI_optimal_threshold = 0.31
 
-
-# Load the model
+# Load the AKD model
 def get_model():
     url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/AKD-LSTM.zip"
     response = requests.get(url)
@@ -33,19 +33,45 @@ def get_model():
 
 model = get_model()
 
-# Load the scaler
+# Load the AKI model
+def get_aki_model():
+    url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/AKI-LSTM.zip"
+    response = requests.get(url)
+    z = zipfile.ZipFile(io.BytesIO(response.content))
+    z.extractall(".")
+    model = load_model("AKI-LSTM.keras", compile=False)
+    return model
+
+aki_model = get_aki_model()
+
+# Load the AKD scaler
 scaler_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_scaler.pkl"
 scaler_response = requests.get(scaler_url)
 with open("akd_scaler.pkl", "wb") as scaler_file:
     scaler_file.write(scaler_response.content)
 normalizer = joblib.load("akd_scaler.pkl")
 
-# Load the imputation
+# Load the AKI scaler
+aki_scaler_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/aki_scaler.pkl"
+aki_scaler_response = requests.get(aki_scaler_url)
+with open("aki_scaler.pkl", "wb") as aki_scaler_file:
+    aki_scaler_file.write(aki_scaler_response.content)
+aki_normalizer = joblib.load("aki_scaler.pkl")
+
+
+# Load the AKD imputation
 url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_miceforest.zip"
 r = requests.get(url)
 z = zipfile.ZipFile(io.BytesIO(r.content))
 z.extractall(".")
 miceforest = joblib.load("akd_miceforest.pkl")
+
+# Load the AKI imputation
+aki_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/aki_miceforest.zip"
+aki_r = requests.get(aki_url)
+aki_z = zipfile.ZipFile(io.BytesIO(aki_r.content))
+aki_z.extractall(".")
+aki_miceforest = joblib.load("aki_miceforest.pkl")
 
 target_columns = [
     'id_no', 'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
@@ -66,6 +92,27 @@ selected_features = [
     'baseline_bun', 'baseline_bun/scr', 'baseline_egfr', 'baseline_sodium',
     'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
     'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history']
+
+
+aki_target_columns = [
+    'id_no', 'age', 'cis_dose', 'cis_cum_dose', 'average_cis_cum_dose',
+    'carb_cum_dose', 'baseline_hemoglobin', 'baseline_bun/scr', 'baseline_egfr',
+    'baseline_sodium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
+    'latest_potassium', 'bun_change', 'bun/scr_change', 'crcl_change',
+    'bun/scr_slope', 'crcl_slope', 'aki_history']
+aki_cols_for_preprocessing = [
+    'id_no', 'age', 'cis_dose', 'cis_cum_dose', 'average_cis_cum_dose',
+    'carb_cum_dose', 'baseline_hemoglobin', 'baseline_bun/scr', 'baseline_egfr',
+    'baseline_sodium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
+    'latest_potassium', 'bun_change', 'bun/scr_change', 'crcl_change',
+    'bun/scr_slope', 'crcl_slope', 'aki_history', 'aki']
+aki_selected_features = [
+    'age', 'cis_dose', 'cis_cum_dose', 'average_cis_cum_dose',
+    'carb_cum_dose', 'baseline_hemoglobin', 'baseline_bun/scr', 'baseline_egfr',
+    'baseline_sodium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
+    'latest_potassium', 'bun_change', 'bun/scr_change', 'crcl_change',
+    'bun/scr_slope', 'crcl_slope', 'aki_history']
+
 
 def post_sequential_padding( # (for return_sequences True)
         data, groupby_col, selected_features, outcome, maxlen
@@ -95,6 +142,8 @@ def post_sequential_padding( # (for return_sequences True)
     )
 
     return X, y
+
+
         
 def preprocessing(
         data, scaler, imputer, cols_for_preprocessing,
