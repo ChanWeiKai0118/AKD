@@ -143,7 +143,34 @@ def post_sequential_padding( # (for return_sequences True)
 
     return X, y
 
+def aki_post_sequential_padding( # (for return_sequences True)
+        data, groupby_col, selected_features, outcome, maxlen
+    ):
+    grouped = data.groupby(groupby_col)
+    sequences = []
+    labels = []
+    for name, group in grouped:
+        sequences.append(group[selected_features].values)
+        labels.append(group[[outcome]].values)
 
+    X = pad_sequences(
+        sequences,
+        maxlen=maxlen,
+        dtype='float32',
+        padding='post',
+        truncating='post',
+        value=-1
+    )
+
+    y = pad_sequences(
+        labels,
+        maxlen=maxlen,
+        padding='post',
+        truncating='post',
+        value=-1
+    )
+
+    return X, y
         
 def preprocessing(
         data, scaler, imputer, cols_for_preprocessing,
@@ -175,6 +202,38 @@ def preprocessing(
     )
 
     return X_test, y_test
+
+def aki_preprocessing(
+        data, scaler, imputer, cols_for_preprocessing,
+        selected_features, groupby_col, outcome, maxlen
+    ):
+    # passing arguments
+    test = data
+    scaler_ = scaler
+    imputer_ = imputer
+
+    # feature selection
+    test_selected = test[cols_for_preprocessing]
+
+    # imputation
+    test_imputed = test_selected.copy()
+    test_imputed[selected_features] = imputer_.transform(test_selected[selected_features])
+
+    # scaling
+    test_scaled = test_imputed.copy()
+    test_scaled[selected_features] = scaler_.transform(test_imputed[selected_features])
+
+    # sequential padding
+    X_test, y_test = post_sequential_padding(
+        data=test_scaled,
+        groupby_col=groupby_col,
+        selected_features=selected_features,
+        outcome=outcome,
+        maxlen=maxlen
+    )
+
+    return X_test, y_test
+
 
 def get_gsheet_client():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -346,11 +405,11 @@ elif mode == "Check data mode":
 # ---第二個 Streamlit UI ---
 st.title("Chemotherapy Data Entry")
 
-mode = st.radio("Select mode", options=["Predict mode", "Check mode"], horizontal=True)
+mode = st.radio("Select mode", options=["Input mode", "Check mode","AKD prediction","AKI prediction"], horizontal=True)
 
-# 預測模式
-if mode == "Predict mode":
-    st.subheader("🔮 Prediction Mode")
+# 輸入模式
+if mode == "Input mode":
+    st.subheader("🔮 Input Mode")
     col1, col2 = st.columns(2)
 
     with col1:
@@ -367,7 +426,7 @@ if mode == "Predict mode":
         carb_dose = st.number_input("Carboplatin Dose (mg)", min_value=0.0, format="%.1f")
         aki_history = st.checkbox("AKI History (Check if Yes)")
         
-    if st.button("Predict"):
+    if st.button("Input"):
         treatment_date_str = treatment_date.strftime("%Y/%m/%d")
         number = str(number).zfill(8)  # 強制補滿8位數
         chemo_data_list = [
@@ -383,7 +442,43 @@ if mode == "Predict mode":
         sheet.append_row(row_to_write, value_input_option="USER_ENTERED")
     
         st.success("✅ Data submitted successfully!")
-    
+        # 👉 顯示剛剛輸入的資料
+        chemo_df = pd.DataFrame([chemo_data_list], columns=['Number','Gender','Weight', 'Age','Date','Cycle','Cisplatin dose','Carboplatin dose','AKI history'])
+        st.subheader("🧾 Submitted Data")
+        st.dataframe(chemo_df)
+        
+        
+# -----------------------------
+# 預覽模式
+elif mode == "Check mode":
+    st.subheader("🗂️ Check Mode")
+    number_preview = st.text_input("Input patient ID", key="preview_id")
+    number_preview = str(number_preview).zfill(8)  # 強制補滿8位數
+    if st.button("Check"):
+        if number_preview:
+            try:
+                client = get_gsheet_client()
+                sheet = client.open("web data").worksheet("chemo_data")
+                all_data = sheet.get_all_records()
+                df = pd.DataFrame(all_data)
+                preview_cols = ['Number', 'weight', 'sex_male', 'age', 'Index_date 1(dose)', 'cis_cycle', 'carb_cycle', 'cis_dose','carb_dose','aki_history']
+                filtered_df = df[preview_cols]
+                # 👉 將 Number 欄位全部轉成補滿8位的字串格式
+                filtered_df['Number'] = filtered_df['Number'].astype(str).str.zfill(8)
+                filtered_df = filtered_df[filtered_df['Number'] == number_preview]
+                
+                if not filtered_df.empty:
+                    st.subheader(f"Patient information（ID: {number_preview}）")
+                    st.dataframe(filtered_df)
+                else:
+                    st.info("❗ The patient has no chemotherapy data")
+            except Exception as e:
+                st.error(f"Something wrong when loading Google Sheet ：{e}")
+        else:
+            st.warning("Please enter patient ID")
+# -----------------------------
+# AKD預測模式
+elif mode == "AKD prediction":
         # 讀取整張表格（包含公式的計算結果）
         raw_values = sheet.get_all_values()
         
@@ -448,31 +543,71 @@ if mode == "Predict mode":
         flat_prob = y_prob[valid_indices]
         last_prob = flat_prob[-1] * 100
         st.subheader(f"Predicted Risk: {last_prob:.2f}%")
+
 # -----------------------------
-# 預覽模式
-elif mode == "Check mode":
-    st.subheader("🗂️ Check Mode")
-    number_preview = st.text_input("Input patient ID", key="preview_id")
-    number_preview = str(number_preview).zfill(8)  # 強制補滿8位數
-    if st.button("Check"):
-        if number_preview:
-            try:
-                client = get_gsheet_client()
-                sheet = client.open("web data").worksheet("chemo_data")
-                all_data = sheet.get_all_records()
-                df = pd.DataFrame(all_data)
-                preview_cols = ['Number', 'weight', 'sex_male', 'age', 'Index_date 1(dose)', 'cis_cycle', 'carb_cycle', 'cis_dose','carb_dose','aki_history']
-                filtered_df = df[preview_cols]
-                # 👉 將 Number 欄位全部轉成補滿8位的字串格式
-                filtered_df['Number'] = filtered_df['Number'].astype(str).str.zfill(8)
-                filtered_df = filtered_df[filtered_df['Number'] == number_preview]
-                
-                if not filtered_df.empty:
-                    st.subheader(f"Patient information（ID: {number_preview}）")
-                    st.dataframe(filtered_df)
-                else:
-                    st.info("❗ The patient has no chemotherapy data")
-            except Exception as e:
-                st.error(f"Something wrong when loading Google Sheet ：{e}")
-        else:
-            st.warning("Please enter patient ID")
+# AKI預測模式
+elif mode == "AKI prediction":
+        # 讀取整張表格（包含公式的計算結果）
+        raw_values = sheet.get_all_values()
+        
+        # 將第0列視為欄位名稱，從第1列開始是資料
+        headers = raw_values[0]
+        data = raw_values[1:]
+        
+        # 建立 DataFrame（這樣可以確保取得的是計算後的值）
+        df = pd.DataFrame(data, columns=headers)
+        
+        # 假設你剛剛 append 的是最後一列
+        last_row_index = len(sheet.get_all_values())
+        last_row_values = sheet.row_values(last_row_index)
+        # 這裡你拿到的是公式運算後的值，不是 `'=A2'` 這種公式本身
+        input_id = last_row_values[0]
+    
+        # 篩選相同 ID 的資料
+        df_filtered = df[df['id_no'] == input_id]
+        df_filtered['Number'] = number
+        # 顯示輸入資料原始樣貌（僅保留指定欄位）
+        cols_to_show = ['Number', 'weight', 'sex_male', 'age', 'Index_date 1(dose)', 'cis_cycle', 'carb_cycle', 'cis_dose','carb_dose','aki_history']
+        preview_data = df_filtered[cols_to_show].tail(6)  # 取最後6筆
+        st.subheader("Data to feed into LSTM model")
+        st.dataframe(preview_data)
+        
+        # 日期排序 + 擷取6筆資料
+        df_filtered = df_filtered.sort_values(by='Index_date 1(dose)', ascending=True).tail(6)
+        
+        # 只取指定欄位
+        input_data = df_filtered[target_columns]
+        
+        # 轉成數值型，非數字會變 NaN
+        input_data = input_data.apply(pd.to_numeric, errors='coerce')
+        input_data.reset_index(drop=True, inplace=True)
+    
+        #加上akd
+        input_data.loc[input_data.index[-1], 'akd'] = 0
+    
+        #進行imputation和scaler
+        X_test, y_test = preprocessing(
+        data=input_data,
+        scaler=normalizer,
+        imputer=miceforest,
+        cols_for_preprocessing=cols_for_preprocessing,
+        groupby_col='id_no',
+        selected_features=selected_features,
+        outcome='akd',
+        maxlen=6)
+    
+        X_test_2d = np.squeeze(X_test)  # shape (6, 39)
+        X_test_df = pd.DataFrame(X_test_2d)
+        
+        # 计算权重，忽略 padding 部分
+        sample_weight = (y_test != -1).astype(float).flatten()
+        
+        # 预测概率
+        y_prob = model.predict(X_test)
+        y_prob = y_prob.squeeze().flatten()
+        
+        # 过滤掉 padding 数据
+        valid_indices = sample_weight > 0
+        flat_prob = y_prob[valid_indices]
+        last_prob = flat_prob[-1] * 100
+        st.subheader(f"Predicted Risk: {last_prob:.2f}%")
