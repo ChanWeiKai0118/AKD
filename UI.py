@@ -73,6 +73,7 @@ aki_z = zipfile.ZipFile(io.BytesIO(aki_r.content))
 aki_z.extractall(".")
 aki_miceforest = joblib.load("aki_miceforest.pkl")
 
+#AKD columns
 target_columns = [
     'id_no', 'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
     'average_cis_cum_dose', 'carb_cum_dose', 'baseline_hemoglobin',
@@ -93,7 +94,7 @@ selected_features = [
     'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
     'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history']
 
-
+#AKI columns
 aki_target_columns = [
     'id_no', 'age', 'cis_dose', 'cis_cum_dose', 'average_cis_cum_dose',
     'carb_cum_dose', 'baseline_hemoglobin', 'baseline_bun/scr', 'baseline_egfr',
@@ -142,68 +143,8 @@ def post_sequential_padding( # (for return_sequences True)
     )
 
     return X, y
-
-def aki_post_sequential_padding( # (for return_sequences True)
-        data, groupby_col, selected_features, outcome, maxlen
-    ):
-    grouped = data.groupby(groupby_col)
-    sequences = []
-    labels = []
-    for name, group in grouped:
-        sequences.append(group[selected_features].values)
-        labels.append(group[[outcome]].values)
-
-    X = pad_sequences(
-        sequences,
-        maxlen=maxlen,
-        dtype='float32',
-        padding='post',
-        truncating='post',
-        value=-1
-    )
-
-    y = pad_sequences(
-        labels,
-        maxlen=maxlen,
-        padding='post',
-        truncating='post',
-        value=-1
-    )
-
-    return X, y
         
 def preprocessing(
-        data, scaler, imputer, cols_for_preprocessing,
-        selected_features, groupby_col, outcome, maxlen
-    ):
-    # passing arguments
-    test = data
-    scaler_ = scaler
-    imputer_ = imputer
-
-    # feature selection
-    test_selected = test[cols_for_preprocessing]
-
-    # imputation
-    test_imputed = test_selected.copy()
-    test_imputed[selected_features] = imputer_.transform(test_selected[selected_features])
-
-    # scaling
-    test_scaled = test_imputed.copy()
-    test_scaled[selected_features] = scaler_.transform(test_imputed[selected_features])
-
-    # sequential padding
-    X_test, y_test = post_sequential_padding(
-        data=test_scaled,
-        groupby_col=groupby_col,
-        selected_features=selected_features,
-        outcome=outcome,
-        maxlen=maxlen
-    )
-
-    return X_test, y_test
-
-def aki_preprocessing(
         data, scaler, imputer, cols_for_preprocessing,
         selected_features, groupby_col, outcome, maxlen
     ):
@@ -479,135 +420,133 @@ elif mode == "Check mode":
 # -----------------------------
 # AKD預測模式
 elif mode == "AKD prediction":
-        # 讀取整張表格（包含公式的計算結果）
+        st.subheader("🔮 AKD prediction")    
+        input_number = st.text_input("Enter Patient ID (Number):")
+        input_date = st.date_input("Treatment Date", datetime.date.today())
+        input_date_str = input_date.strftime("%Y/%m/%d")
+        if input_number and input_date_str:
+    try:
+
+        # === Step 2: 讀取 Google Sheet 資料 ===
         raw_values = sheet.get_all_values()
-        
-        # 將第0列視為欄位名稱，從第1列開始是資料
         headers = raw_values[0]
         data = raw_values[1:]
-        
-        # 建立 DataFrame（這樣可以確保取得的是計算後的值）
         df = pd.DataFrame(data, columns=headers)
-        
-        # 假設你剛剛 append 的是最後一列
-        last_row_index = len(sheet.get_all_values())
-        last_row_values = sheet.row_values(last_row_index)
-        # 這裡你拿到的是公式運算後的值，不是 `'=A2'` 這種公式本身
-        input_id = last_row_values[0]
-    
-        # 篩選相同 ID 的資料
-        df_filtered = df[df['id_no'] == input_id]
-        df_filtered['Number'] = number
-        # 顯示輸入資料原始樣貌（僅保留指定欄位）
-        cols_to_show = ['Number', 'weight', 'sex_male', 'age', 'Index_date 1(dose)', 'cis_cycle', 'carb_cycle', 'cis_dose','carb_dose','aki_history']
-        preview_data = df_filtered[cols_to_show].tail(6)  # 取最後6筆
-        st.subheader("Data to feed into LSTM model")
-        st.dataframe(preview_data)
-        
-        # 日期排序 + 擷取6筆資料
-        df_filtered = df_filtered.sort_values(by='Index_date 1(dose)', ascending=True).tail(6)
-        
-        # 只取指定欄位
-        input_data = df_filtered[target_columns]
-        
-        # 轉成數值型，非數字會變 NaN
-        input_data = input_data.apply(pd.to_numeric, errors='coerce')
-        input_data.reset_index(drop=True, inplace=True)
-    
-        #加上akd
-        input_data.loc[input_data.index[-1], 'akd'] = 0
-    
-        #進行imputation和scaler
-        X_test, y_test = preprocessing(
-        data=input_data,
-        scaler=normalizer,
-        imputer=miceforest,
-        cols_for_preprocessing=cols_for_preprocessing,
-        groupby_col='id_no',
-        selected_features=selected_features,
-        outcome='akd',
-        maxlen=6)
-    
-        X_test_2d = np.squeeze(X_test)  # shape (6, 39)
-        X_test_df = pd.DataFrame(X_test_2d)
-        
-        # 计算权重，忽略 padding 部分
-        sample_weight = (y_test != -1).astype(float).flatten()
-        
-        # 预测概率
-        y_prob = model.predict(X_test)
-        y_prob = y_prob.squeeze().flatten()
-        
-        # 过滤掉 padding 数据
-        valid_indices = sample_weight > 0
-        flat_prob = y_prob[valid_indices]
-        last_prob = flat_prob[-1] * 100
-        st.subheader(f"Predicted Risk: {last_prob:.2f}%")
+
+        # === Step 3: 找到該筆 row ===
+        df_patient = df[df['Number'] == input_number]
+        df_patient = df_patient.sort_values(by='Index_date 1(dose)')
+
+        # 找到最接近輸入日期的 row（可根據 exact match 或最近的）
+        selected_row = df_patient[df_patient['Index_date 1(dose)'] == input_date_str]
+
+        if selected_row.empty:
+            st.warning("No exact match found for this date. Please check again.")
+        else:
+            target_index = selected_row.index[0]
+            selected_rows = df_patient.loc[:target_index].tail(6)
+
+            # 顯示預測用資料
+            st.subheader("Data for Prediction")
+            st.dataframe(selected_rows)
+
+            # Step 4: 準備輸入模型資料
+            input_data = selected_rows[target_columns]
+            # 轉成數值型，非數字會變 NaN
+            input_data = input_data.apply(pd.to_numeric, errors='coerce')
+            input_data.reset_index(drop=True, inplace=True)
+            
+            #加上akd
+            input_data.loc[input_data.index[-1], 'akd'] = 0
+            
+            #進行imputation和scaler
+            X_test, y_test = preprocessing(
+                data=input_data,
+                scaler=normalizer,
+                imputer=miceforest,
+                cols_for_preprocessing=cols_for_preprocessing,
+                groupby_col='id_no',  # or 'Number' if that's what you use
+                selected_features=selected_features,
+                outcome='akd',
+                maxlen=6
+            )
+            # 预测概率
+            y_prob = model.predict(X_test).squeeze().flatten()
+            
+            # 过滤掉 padding 数据
+            sample_weight = (y_test != -1).astype(float).flatten()
+            valid_indices = sample_weight > 0
+            flat_prob = y_prob[valid_indices]
+            last_prob = flat_prob[-1] * 100
+
+            st.subheader(f"Predicted AKD Risk: {last_prob:.2f}%")
+
+    except Exception as e:
+        st.error(f"Error processing your request: {e}")
 
 # -----------------------------
 # AKI預測模式
 elif mode == "AKI prediction":
-        # 讀取整張表格（包含公式的計算結果）
+        st.subheader("🔮 AKI prediction")    
+        input_number_aki = st.text_input("Enter Patient ID (Number):")
+        input_date_aki = st.date_input("Treatment Date", datetime.date.today())
+        input_date_str = input_date_aki.strftime("%Y/%m/%d")
+        if input_number and input_date_str:
+    try:
+
+        # === Step 2: 讀取 Google Sheet 資料 ===
         raw_values = sheet.get_all_values()
-        
-        # 將第0列視為欄位名稱，從第1列開始是資料
         headers = raw_values[0]
         data = raw_values[1:]
-        
-        # 建立 DataFrame（這樣可以確保取得的是計算後的值）
         df = pd.DataFrame(data, columns=headers)
-        
-        # 假設你剛剛 append 的是最後一列
-        last_row_index = len(sheet.get_all_values())
-        last_row_values = sheet.row_values(last_row_index)
-        # 這裡你拿到的是公式運算後的值，不是 `'=A2'` 這種公式本身
-        input_id = last_row_values[0]
-    
-        # 篩選相同 ID 的資料
-        df_filtered = df[df['id_no'] == input_id]
-        df_filtered['Number'] = number
-        # 顯示輸入資料原始樣貌（僅保留指定欄位）
-        cols_to_show = ['Number', 'weight', 'sex_male', 'age', 'Index_date 1(dose)', 'cis_cycle', 'carb_cycle', 'cis_dose','carb_dose','aki_history']
-        preview_data = df_filtered[cols_to_show].tail(6)  # 取最後6筆
-        st.subheader("Data to feed into LSTM model")
-        st.dataframe(preview_data)
-        
-        # 日期排序 + 擷取6筆資料
-        df_filtered = df_filtered.sort_values(by='Index_date 1(dose)', ascending=True).tail(6)
-        
-        # 只取指定欄位
-        input_data = df_filtered[target_columns]
-        
-        # 轉成數值型，非數字會變 NaN
-        input_data = input_data.apply(pd.to_numeric, errors='coerce')
-        input_data.reset_index(drop=True, inplace=True)
-    
-        #加上akd
-        input_data.loc[input_data.index[-1], 'akd'] = 0
-    
-        #進行imputation和scaler
-        X_test, y_test = preprocessing(
-        data=input_data,
-        scaler=normalizer,
-        imputer=miceforest,
-        cols_for_preprocessing=cols_for_preprocessing,
-        groupby_col='id_no',
-        selected_features=selected_features,
-        outcome='akd',
-        maxlen=6)
-    
-        X_test_2d = np.squeeze(X_test)  # shape (6, 39)
-        X_test_df = pd.DataFrame(X_test_2d)
-        
-        # 计算权重，忽略 padding 部分
-        sample_weight = (y_test != -1).astype(float).flatten()
-        
-        # 预测概率
-        y_prob = model.predict(X_test)
-        y_prob = y_prob.squeeze().flatten()
-        
-        # 过滤掉 padding 数据
-        valid_indices = sample_weight > 0
-        flat_prob = y_prob[valid_indices]
-        last_prob = flat_prob[-1] * 100
-        st.subheader(f"Predicted Risk: {last_prob:.2f}%")
+
+        # === Step 3: 找到該筆 row ===
+        df_patient = df[df['Number'] == input_number_aki]
+        df_patient = df_patient.sort_values(by='Index_date 1(dose)')
+
+        # 找到最接近輸入日期的 row（可根據 exact match 或最近的）
+        selected_row = df_patient[df_patient['Index_date 1(dose)'] == input_date_str]
+
+        if selected_row.empty:
+            st.warning("No exact match found for this date. Please check again.")
+        else:
+            target_index = selected_row.index[0]
+            selected_rows = df_patient.loc[:target_index].tail(6)
+
+            # 顯示預測用資料
+            st.subheader("Data for Prediction")
+            st.dataframe(selected_rows)
+
+            # Step 4: 準備輸入模型資料
+            input_data = selected_rows[aki_target_columns]
+            # 轉成數值型，非數字會變 NaN
+            input_data = input_data.apply(pd.to_numeric, errors='coerce')
+            input_data.reset_index(drop=True, inplace=True)
+            
+            #加上akd
+            input_data.loc[input_data.index[-1], 'aki'] = 0
+            
+            #進行imputation和scaler
+            X_test, y_test = preprocessing(
+                data=input_data,
+                scaler=aki_normalizer,
+                imputer=aki_miceforest,
+                cols_for_preprocessing=aki_cols_for_preprocessing,
+                groupby_col='id_no',  # or 'Number' if that's what you use
+                selected_features=aki_selected_features,
+                outcome='aki',
+                maxlen=6
+            )
+            # 预测概率
+            y_prob = aki_model.predict(X_test).squeeze().flatten()
+            
+            # 过滤掉 padding 数据
+            sample_weight = (y_test != -1).astype(float).flatten()
+            valid_indices = sample_weight > 0
+            flat_prob = y_prob[valid_indices]
+            last_prob = flat_prob[-1] * 100
+
+            st.subheader(f"Predicted AKI Risk: {last_prob:.2f}%")
+
+    except Exception as e:
+        st.error(f"Error processing your request: {e}")
