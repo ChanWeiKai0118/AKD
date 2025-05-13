@@ -29,6 +29,6 @@ img.save(buffer, format="PNG")
 buffer.seek(0)
 
 # 在 Streamlit 页面中展示二维码
-st.title("Welcome to the AKD Prediction App!")
+st.title("Welcome to the AKD/AKI Prediction App!")
 st.write("Scan the QR code below to access the app:")
 st.image(Image.open(buffer), caption="Scan to access")
