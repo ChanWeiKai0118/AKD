@@ -18,11 +18,12 @@ from keras.models import load_model
 import tensorflow as tf
 
 
-#model的threshold，目前沒用到
+#超重要，model的threshold
 AKD_optimal_threshold = 0.29
 AKI_optimal_threshold = 0.31
 
 # Load the AKD model
+@st.cache_resource
 def get_model():
     url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/AKD-LSTM.zip"
     response = requests.get(url)
@@ -31,9 +32,26 @@ def get_model():
     model = load_model("AKD-LSTM.keras", compile=False)
     return model
 
-model = get_model()
+# Load the AKD scaler
+@st.cache_resource
+def get_scaler():
+    scaler_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_scaler.pkl"
+    scaler_response = requests.get(scaler_url)
+    with open("akd_scaler.pkl", "wb") as scaler_file:
+        scaler_file.write(scaler_response.content)
+    return joblib.load("akd_scaler.pkl")
+
+# Load the AKD imputation
+@st.cache_resource
+def get_imputer():
+    url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_miceforest.zip"
+    r = requests.get(url)
+    z = zipfile.ZipFile(io.BytesIO(r.content))
+    z.extractall(".")
+    return joblib.load("akd_miceforest.pkl")
 
 # Load the AKI model
+@st.cache_resource
 def get_aki_model():
     url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/AKI-LSTM.zip"
     response = requests.get(url)
@@ -42,78 +60,23 @@ def get_aki_model():
     model = load_model("AKI-LSTM.keras", compile=False)
     return model
 
-aki_model = get_aki_model()
-
-# Load the AKD scaler
-scaler_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_scaler.pkl"
-scaler_response = requests.get(scaler_url)
-with open("akd_scaler.pkl", "wb") as scaler_file:
-    scaler_file.write(scaler_response.content)
-normalizer = joblib.load("akd_scaler.pkl")
-
 # Load the AKI scaler
-aki_scaler_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/aki_scaler.pkl"
-aki_scaler_response = requests.get(aki_scaler_url)
-with open("aki_scaler.pkl", "wb") as aki_scaler_file:
-    aki_scaler_file.write(aki_scaler_response.content)
-aki_normalizer = joblib.load("aki_scaler.pkl")
-
-
-# Load the AKD imputation
-url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/akd_miceforest.zip"
-r = requests.get(url)
-z = zipfile.ZipFile(io.BytesIO(r.content))
-z.extractall(".")
-miceforest = joblib.load("akd_miceforest.pkl")
+@st.cache_resource
+def get_aki_scaler():
+    aki_scaler_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/aki_scaler.pkl"
+    aki_scaler_response = requests.get(aki_scaler_url)
+    with open("aki_scaler.pkl", "wb") as aki_scaler_file:
+        aki_scaler_file.write(aki_scaler_response.content)
+    return joblib.load("aki_scaler.pkl")
 
 # Load the AKI imputation
-aki_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/aki_miceforest.zip"
-aki_r = requests.get(aki_url)
-aki_z = zipfile.ZipFile(io.BytesIO(aki_r.content))
-aki_z.extractall(".")
-aki_miceforest = joblib.load("aki_miceforest.pkl")
-
-#AKD columns
-target_columns = [
-    'id_no', 'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
-    'average_cis_cum_dose', 'carb_cum_dose', 'baseline_hemoglobin',
-    'baseline_bun', 'baseline_bun/scr', 'baseline_egfr', 'baseline_sodium',
-    'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
-    'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history']
-cols_for_preprocessing = [
-    'id_no', 'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
-    'average_cis_cum_dose', 'carb_cum_dose', 'baseline_hemoglobin',
-    'baseline_bun', 'baseline_bun/scr', 'baseline_egfr', 'baseline_sodium',
-    'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
-    'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history',
-    'akd']
-selected_features = [
-    'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
-    'average_cis_cum_dose', 'carb_cum_dose', 'baseline_hemoglobin',
-    'baseline_bun', 'baseline_bun/scr', 'baseline_egfr', 'baseline_sodium',
-    'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
-    'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history']
-
-#AKI columns
-aki_target_columns = [
-    'id_no', 'age', 'cis_dose', 'cis_cum_dose', 'average_cis_cum_dose',
-    'carb_cum_dose', 'baseline_hemoglobin', 'baseline_bun/scr', 'baseline_egfr',
-    'baseline_sodium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
-    'latest_potassium', 'bun_change', 'bun/scr_change', 'crcl_change',
-    'bun/scr_slope', 'crcl_slope', 'aki_history']
-aki_cols_for_preprocessing = [
-    'id_no', 'age', 'cis_dose', 'cis_cum_dose', 'average_cis_cum_dose',
-    'carb_cum_dose', 'baseline_hemoglobin', 'baseline_bun/scr', 'baseline_egfr',
-    'baseline_sodium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
-    'latest_potassium', 'bun_change', 'bun/scr_change', 'crcl_change',
-    'bun/scr_slope', 'crcl_slope', 'aki_history', 'aki']
-aki_selected_features = [
-    'age', 'cis_dose', 'cis_cum_dose', 'average_cis_cum_dose',
-    'carb_cum_dose', 'baseline_hemoglobin', 'baseline_bun/scr', 'baseline_egfr',
-    'baseline_sodium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
-    'latest_potassium', 'bun_change', 'bun/scr_change', 'crcl_change',
-    'bun/scr_slope', 'crcl_slope', 'aki_history']
-
+@st.cache_resource
+def get_aki_imputer():
+    aki_url = "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/aki_miceforest.zip"
+    aki_r = requests.get(aki_url)
+    aki_z = zipfile.ZipFile(io.BytesIO(aki_r.content))
+    aki_z.extractall(".")
+    return joblib.load("aki_miceforest.pkl")
 
 def post_sequential_padding( # (for return_sequences True)
         data, groupby_col, selected_features, outcome, maxlen
@@ -319,10 +282,10 @@ if mode == "Input data mode":
 elif mode == "Check data mode":
     st.subheader("🗂️ Check Data Mode")
     number_check = st.text_input("Input patient ID", key="check_id")
-    number_check = str(number_check).zfill(8)  # 強制補滿8位數
     if st.button("Check Lab Data"):
         if number_check:
             try:
+                number_check = str(number_check).zfill(8)  # 強制補滿8位數
                 client = get_gsheet_client()
                 sheet = client.open("web data").worksheet("lab_data")
                 all_data = sheet.get_all_records()
@@ -394,8 +357,8 @@ if mode == "Input mode":
 elif mode == "Check mode":
     st.subheader("🗂️ Check Mode")
     number_preview = st.text_input("Input patient ID", key="preview_id")
-    number_preview = str(number_preview).zfill(8)  # 強制補滿8位數
     if st.button("Check"):
+        number_preview = str(number_preview).zfill(8)  # 強制補滿8位數
         if number_preview:
             try:
                 client = get_gsheet_client()
@@ -428,7 +391,26 @@ elif mode == "AKD prediction":
         if st.button("AKD prediction"):
             if input_number and input_date_str:
                 try:
-            
+                    #AKD columns
+                    target_columns = [
+                        'id_no', 'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
+                        'average_cis_cum_dose', 'carb_cum_dose', 'baseline_hemoglobin',
+                        'baseline_bun', 'baseline_bun/scr', 'baseline_egfr', 'baseline_sodium',
+                        'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
+                        'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history']
+                    cols_for_preprocessing = [
+                        'id_no', 'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
+                        'average_cis_cum_dose', 'carb_cum_dose', 'baseline_hemoglobin',
+                        'baseline_bun', 'baseline_bun/scr', 'baseline_egfr', 'baseline_sodium',
+                        'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
+                        'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history',
+                        'akd']
+                    selected_features = [
+                        'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
+                        'average_cis_cum_dose', 'carb_cum_dose', 'baseline_hemoglobin',
+                        'baseline_bun', 'baseline_bun/scr', 'baseline_egfr', 'baseline_sodium',
+                        'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
+                        'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history']
                     # === Step 2: 讀取 Google Sheet 資料 ===
                     client = get_gsheet_client()
                     sheet = client.open("web data").worksheet("chemo_data")
@@ -464,6 +446,8 @@ elif mode == "AKD prediction":
                         input_data.loc[input_data.index[-1], 'akd'] = 0
                         
                         #進行imputation和scaler
+                        normalizer = get_scaler()
+                        miceforest = get_imputer()
                         X_test, y_test = preprocessing(
                             data=input_data,
                             scaler=normalizer,
@@ -475,6 +459,7 @@ elif mode == "AKD prediction":
                             maxlen=6
                         )
                         # 预测概率
+                        model = get_model()
                         y_prob = model.predict(X_test).squeeze().flatten()
                         
                         # 过滤掉 padding 数据
@@ -499,7 +484,25 @@ elif mode == "AKI prediction":
         if st.button("AKI prediction"):
             if input_number_aki and input_date_aki_str:
                 try:
-            
+                    #AKI columns
+                    aki_target_columns = [
+                        'id_no', 'age', 'cis_dose', 'cis_cum_dose', 'average_cis_cum_dose',
+                        'carb_cum_dose', 'baseline_hemoglobin', 'baseline_bun/scr', 'baseline_egfr',
+                        'baseline_sodium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
+                        'latest_potassium', 'bun_change', 'bun/scr_change', 'crcl_change',
+                        'bun/scr_slope', 'crcl_slope', 'aki_history']
+                    aki_cols_for_preprocessing = [
+                        'id_no', 'age', 'cis_dose', 'cis_cum_dose', 'average_cis_cum_dose',
+                        'carb_cum_dose', 'baseline_hemoglobin', 'baseline_bun/scr', 'baseline_egfr',
+                        'baseline_sodium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
+                        'latest_potassium', 'bun_change', 'bun/scr_change', 'crcl_change',
+                        'bun/scr_slope', 'crcl_slope', 'aki_history', 'aki']
+                    aki_selected_features = [
+                        'age', 'cis_dose', 'cis_cum_dose', 'average_cis_cum_dose',
+                        'carb_cum_dose', 'baseline_hemoglobin', 'baseline_bun/scr', 'baseline_egfr',
+                        'baseline_sodium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
+                        'latest_potassium', 'bun_change', 'bun/scr_change', 'crcl_change',
+                        'bun/scr_slope', 'crcl_slope', 'aki_history']
                     # === Step 2: 讀取 Google Sheet 資料 ===
                     client = get_gsheet_client()
                     sheet = client.open("web data").worksheet("chemo_data")
@@ -535,6 +538,8 @@ elif mode == "AKI prediction":
                         input_data.loc[input_data.index[-1], 'aki'] = 0
                         
                         #進行imputation和scaler
+                        aki_normalizer = get_aki_scaler()
+                        aki_miceforest = get_aki_imputer()
                         X_test, y_test = preprocessing(
                             data=input_data,
                             scaler=aki_normalizer,
@@ -546,6 +551,7 @@ elif mode == "AKI prediction":
                             maxlen=6
                         )
                         # 预测概率
+                        aki_model = get_aki_model()
                         y_prob = aki_model.predict(X_test).squeeze().flatten()
                         
                         # 过滤掉 padding 数据
