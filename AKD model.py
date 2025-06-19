@@ -252,6 +252,15 @@ st.image("https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/Nephrotoxici
 
 # --- 第一個 Streamlit UI (檢驗數據) ---
 st.title("Laboratory Data Entry")
+st.markdown(
+    """
+    <div style="background-color: #d4f4dd; padding: 10px; border-radius: 8px;">
+        <h1 style="color: black; text-align: center;">Laboratory Data Entry</h1>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 mode = st.radio("Select mode", options=["Input data mode", "Check data mode"], horizontal=True)
 # 輸入模式
 if mode == "Input data mode":
