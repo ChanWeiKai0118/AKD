@@ -325,14 +325,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-st.markdown("""
-    <style>
-    /* 改變所有 radio 按鈕的文字大小 */
-    div[role="radiogroup"] label {
-        font-size: 20px !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
+
 mode = st.radio("Select mode", options=["Input mode", "Check mode","AKD prediction","AKI prediction"], horizontal=True)
 
 # 輸入模式
