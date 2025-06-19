@@ -251,7 +251,6 @@ def save_to_gsheet(data, sheet_name):
 st.image("https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/Nephrotoxicity picture.png", width=1000)
 
 # --- 第一個 Streamlit UI (檢驗數據) ---
-st.title("Laboratory Data Entry")
 st.markdown(
     """
     <div style="background-color: #d4f4dd; padding: 10px; border-radius: 8px;">
@@ -318,8 +317,22 @@ elif mode == "Check data mode":
             st.warning("Please enter patient ID")
 
 # ---第二個 Streamlit UI ---
-st.title("Chemotherapy Data Entry")
-
+st.markdown(
+    """
+    <div style="background-color: #FFFFE0; padding: 10px; border-radius: 8px;">
+        <h1 style="color: black; text-align: center;">Chemotherapy Data Entry</h1>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+st.markdown("""
+    <style>
+    /* 改變所有 radio 按鈕的文字大小 */
+    div[role="radiogroup"] label {
+        font-size: 20px !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
 mode = st.radio("Select mode", options=["Input mode", "Check mode","AKD prediction","AKI prediction"], horizontal=True)
 
 # 輸入模式
