@@ -347,7 +347,7 @@ if mode == "Input mode":
         carb_dose = st.number_input("Carboplatin Dose (mg)", min_value=0.0, format="%.1f")
         aki_history = st.checkbox("AKI History (Check if Yes)")
         
-    if st.button("Submit chemo data"):
+    if st.button("Submit Chemo Data"):
         treatment_date_str = treatment_date.strftime("%Y/%m/%d")
         number = str(number).zfill(8)  # 強制補滿8位數
         chemo_data_list = [
@@ -374,7 +374,7 @@ if mode == "Input mode":
 elif mode == "Check mode":
     st.subheader("🗂️ Check Mode")
     number_preview = st.text_input("Input patient ID", key="preview_id")
-    if st.button("Check chemo data"):
+    if st.button("Check Chemo Data"):
         number_preview = str(number_preview).zfill(8)  # 強制補滿8位數
         if number_preview:
             try:
