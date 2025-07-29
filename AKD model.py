@@ -247,8 +247,7 @@ def save_to_gsheet(data, sheet_name):
 
         sheet.append_row(row, value_input_option="USER_ENTERED")
 
-# 使用 GitHub 上的圖片
-st.image("https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/Nephrotoxicity picture.png", width=1000)
+
 
 # --- 第一個 Streamlit UI (檢驗數據) ---
 st.markdown(
