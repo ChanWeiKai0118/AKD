@@ -154,12 +154,12 @@ def save_to_gsheet(data, sheet_name):
         row = ["" for _ in range(57)]  
         row[1], row[3], row[2], row[4], row[5] = data[0], data[1], data[2], data[3], data[4]
     
-        if data[6] != 0:
+        if data[7] != 0:
             row[6], row[7] = data[5], 0
         else:
             row[6], row[7] = 0, data[5]
     
-        row[10], row[13] = data[6], data[7]
+        row[10], row[13] = data[7], data[8]
         
         # 抓之前的資料
         all_rows = sheet.get_all_values() 
@@ -168,7 +168,8 @@ def save_to_gsheet(data, sheet_name):
         row[0] = f'=IF(ROW()=2, 1, IF(COUNTIF(B$2:B{last_row-1}, B{last_row}) = 0, MAX(A$2:A{last_row-1}) + 1, IF(OR(H{last_row}<INDEX(H$2:H{last_row-1}, MAX(IF($B$2:B{last_row-1}=B{last_row}, ROW($B$2:B{last_row-1})-1, 0))),G{last_row}<INDEX(G$2:G{last_row-1}, MAX(IF($B$2:B{last_row-1}=B{last_row}, ROW($B$2:B{last_row-1})-1, 0))),F{last_row} - INDEX(F$2:F{last_row-1}, MAX(IF($B$2:B{last_row-1} = B{last_row}, ROW($B$2:B{last_row-1}) - 1, 0))) > 42), MAX(A$2:A{last_row-1}) + 1, INDEX(A$2:A{last_row-1}, MAX(IF(B$2:B{last_row-1}=B{last_row}, ROW($B$2:B{last_row-1})-1, 0))))))'
     
         row[8] = f'=IF(COUNTIF(A$2:A{last_row}, A{last_row}) = 1, 0, (F{last_row} - INDEX(F$2:F{last_row}, MATCH(A{last_row}, A$2:A{last_row}, 0)))/7)'
-    
+        row[9] = data[6]
+        
         row[11] = f'=SUMIF(A$2:A{last_row}, A{last_row}, J$2:J{last_row})'
         row[12] = f'=IF(OR(G{last_row}=0, K{last_row}=0), 0, K{last_row} / G{last_row})'
         row[14] = f'=SUMIF(A$2:A{last_row}, A{last_row}, M$2:M{last_row})'
@@ -213,13 +214,13 @@ def save_to_gsheet(data, sheet_name):
         # 取得目前病人 ID 和給藥日期
         current_id = data[0]
         current_date = data[4]
-        checkbox_checked = data[8]
+        checkbox_checked = data[9]
         has_aki_history = False
         for r in reversed(all_rows[1:]):  # 從最新資料往回找
             if r[1] == current_id and r[5] < current_date and r[56] == "1":  # 注意：從 Google Sheet 抓下來是字串
                 has_aki_history = True
                 break
-        if data[8] or has_aki_history : 
+        if data[9] or has_aki_history : 
             row[55] = 1
         else :
             row[55] = 0  # UI 有勾 or 過去有 AKI 就是 1
@@ -356,7 +357,7 @@ if mode == "Input mode":
         number = str(number).zfill(8)  # 強制補滿8位數
         chemo_data_list = [
             number, gender_value, weight, age, 
-            treatment_date_str, cycle_no, cis_dose, carb_dose, aki_history ,dose_percentage 
+            treatment_date_str, cycle_no, dose_percentage, cis_dose, carb_dose, aki_history 
         ]
     
         # 回傳資料行、AKI 判定結果、病人 ID
@@ -368,7 +369,7 @@ if mode == "Input mode":
     
         st.success("✅ Data submitted successfully!")
         # 👉 顯示剛剛輸入的資料
-        chemo_df = pd.DataFrame([chemo_data_list], columns=['Number','Gender','Weight', 'Age','Date','Cycle','Cisplatin dose','Carboplatin dose','Dose percentage(%)','AKI history'])
+        chemo_df = pd.DataFrame([chemo_data_list], columns=['Number','Gender','Weight', 'Age','Date','Cycle','Dose percentage(%)','Cisplatin dose','Carboplatin dose','AKI history'])
         st.subheader("🧾 Submitted Data")
         st.dataframe(chemo_df)
         
@@ -585,6 +586,7 @@ elif mode == "AKI prediction":
             
                 except Exception as e:
                     st.error(f"Error processing your request: {e}")
+
 
 
 
