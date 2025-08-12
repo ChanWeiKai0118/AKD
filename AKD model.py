@@ -538,7 +538,7 @@ elif mode == "AKD prediction":
                         valid_indices = sample_weight > 0
                         flat_prob = y_prob[valid_indices]
                         last_prob = flat_prob[-1] * 100
-            
+                        st.subheader(f"Predicted AKD Risk: <span style='color:red;'>{last_prob:.2f}%</span> (with dose {dose_percentage}%)", unsafe_allow_html=True)
                         st.subheader(f"Predicted AKD Risk: {last_prob:.2f}% (with dose {dose_percentage}%)")
 
                         st.markdown("---")
@@ -709,6 +709,7 @@ elif mode == "AKI prediction":
             
                 except Exception as e:
                     st.error(f"Error processing your request: {e}")
+
 
 
 
