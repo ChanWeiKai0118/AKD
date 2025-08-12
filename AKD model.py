@@ -213,6 +213,8 @@ def save_to_gsheet(data, sheet_name):
         row[52] = f'=IF(AZ{last_row}="","",TO_DATE(XLOOKUP(AZ{last_row}, FILTER(lab_data!H:H, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 14)), FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 14)), "Not found")))'
         row[53] = f'=IF(AZ{last_row}="", "", IF(D{last_row}=0, IF(AZ{last_row}<=0.7, 141*((AZ{last_row}/0.7)^-0.329)*0.993^E{last_row}*1.018, 141*((AZ{last_row}/0.7)^-1.209)*0.993^E{last_row}*1.018), IF(AZ{last_row}<=0.9, 141*((AZ{last_row}/0.9)^-0.411)*0.993^E{last_row}, 141*((AZ{last_row}/0.9)^-1.209)*0.993^E{last_row})))'
         row[55] = f'=IF(AZ{last_row}="", 0, IF(D{last_row}=1,IF(R{last_row}>=1.3,IF(OR(AZ{last_row}/Q{last_row}>=1.5, AZ{last_row}/R{last_row}>=1.5), 1, 0),IF(OR(AZ{last_row}/Q{last_row}>=1.5, AZ{last_row}/R{last_row}>=1.5, AZ{last_row}/1.3>=1.5), 1, 0)),IF(R{last_row}>=1.1,IF(OR(AZ{last_row}/Q{last_row}>=1.5, AZ{last_row}/R{last_row}>=1.5), 1, 0),IF(OR(AZ{last_row}/Q{last_row}>=1.5, AZ{last_row}/R{last_row}>=1.5, AZ{last_row}/1.1>=1.5), 1, 0))))'
+        row[56] = f'=IF(AW{last_row}="", 0, IF(V{last_row}<60, IF(OR(AW{last_row}/R{last_row}>=1.5,AW{last_row}/Q{last_row}>=1.5, AY{last_row}/V{last_row}<0.65,AY{last_row}/U{last_row}<0.65, BD{last_row}=1), 1, 0), IF(OR(AW{last_row}/R{last_row}>=1.5,AW{last_row}/Q{last_row}>=1.5, AY{last_row}/V{last_row}<0.65,AY{last_row}/U{last_row}<0.65, BD{last_row}=1, AY{last_row}<60), 1, 0)))
+
         
         # AKI_history判定
         # 取得目前病人 ID 和給藥日期
@@ -615,6 +617,7 @@ elif mode == "AKI prediction":
             
                 except Exception as e:
                     st.error(f"Error processing your request: {e}")
+
 
 
 
