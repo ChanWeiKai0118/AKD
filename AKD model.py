@@ -759,7 +759,7 @@ elif mode == "AKI prediction":
                                     
                                     prediction_results[f'{percentage}%'] = last_prob
                                     st.write(f"Cisplatin Dose: {new_cis_dose:.2f} mg")
-                                    st.info(f"Predicted AKD Risk: **{last_prob:.2f}%**")
+                                    st.info(f"Predicted AKI Risk: **{last_prob:.2f}%**")
                             elif dose_type == 'Carboplatin':
                                     # 調整 Carboplatin 相關劑量
                                     dose_percentage = input_data_modified.loc[last_row_index, 'dose_percentage']
@@ -790,10 +790,11 @@ elif mode == "AKI prediction":
                                     
                                     prediction_results[f'{percentage}%'] = last_prob
                                     st.write(f"Carboplatin Dose: {new_carb_dose:.2f} mg")
-                                    st.info(f"Predicted AKD Risk: **{last_prob:.2f}%**")
+                                    st.info(f"Predicted AKI Risk: **{last_prob:.2f}%**")
                                 
                 except Exception as e:
                     st.error(f"Error processing your request: {e}")
+
 
 
 
