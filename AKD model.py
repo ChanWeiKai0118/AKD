@@ -207,10 +207,10 @@ def save_to_gsheet(data, sheet_name):
         row[46] = f'=IF(OR(AS{last_row}="",AV{last_row}=""),"",IF(AV{last_row}=0,0,AV{last_row}/DATEVALUE(INDEX(lab_data!$E:$E,MATCH(1,(lab_data!$A:$A=$B{last_row})*(lab_data!$E:$E=MAX(FILTER(lab_data!$E:$E,(lab_data!$A:$A=$B{last_row})*(lab_data!$E:$E<=$F{last_row})*(lab_data!N:N<>""))))*(lab_data!N:N<>""),0))-XLOOKUP(AS{last_row},FILTER(lab_data!N:N,(lab_data!$A:$A=$B{last_row})*(lab_data!$E:$E<=$F{last_row})),FILTER(lab_data!$E:$E,(lab_data!$A:$A=$B{last_row})*(lab_data!$E:$E<=$F{last_row})),"Not found"))))'
         row[47] = f'=IF(AT{last_row}="", "", AT{last_row} - AS{last_row})'
         row[48] = f'=IFNA(IF(MAX(FILTER(lab_data!H:H, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 89)))=0, "", MAX(FILTER(lab_data!H:H, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 89)))), "")'
-        row[49] = f'=IF(AZ{last_row}="","",(XLOOKUP(AZ{last_row}, FILTER(lab_data!H:H, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 89)), FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 89)), "Not found")))'
+        row[49] = f'=IF(AZ{last_row}="","",TO_DATE(XLOOKUP(AZ{last_row}, FILTER(lab_data!H:H, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 89)), FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 89)), "Not found")))'
         row[50] = f'=IF(AW{last_row}="", "", IF(D{last_row}=0, IF(AW{last_row}<=0.7, 141*((AW{last_row}/0.7)^-0.329)*0.993^E{last_row}*1.018, 141*((AW{last_row}/0.7)^-1.209)*0.993^E{last_row}*1.018), IF(AW{last_row}<=0.9, 141*((AW{last_row}/0.9)^-0.411)*0.993^E{last_row}, 141*((AW{last_row}/0.9)^-1.209)*0.993^E{last_row})))'
         row[51] = f'=IFNA(IF(MAX(FILTER(lab_data!H:H, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 14)))=0, "", MAX(FILTER(lab_data!H:H, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 14)))), "")'
-        row[52] = f'=IF(AZ{last_row}="","",(XLOOKUP(AZ{last_row}, FILTER(lab_data!H:H, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 14)), FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 14)), "Not found")))'
+        row[52] = f'=IF(AZ{last_row}="","",TO_DATE(XLOOKUP(AZ{last_row}, FILTER(lab_data!H:H, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 14)), FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 14)), "Not found")))'
         row[53] = f'=IF(AZ{last_row}="", "", IF(D{last_row}=0, IF(AZ{last_row}<=0.7, 141*((AZ{last_row}/0.7)^-0.329)*0.993^E{last_row}*1.018, 141*((AZ{last_row}/0.7)^-1.209)*0.993^E{last_row}*1.018), IF(AZ{last_row}<=0.9, 141*((AZ{last_row}/0.9)^-0.411)*0.993^E{last_row}, 141*((AZ{last_row}/0.9)^-1.209)*0.993^E{last_row})))'
         row[55] = f'=IF(AZ{last_row}="", 0, IF(D{last_row}=1,IF(R{last_row}>=1.3,IF(OR(AZ{last_row}/Q{last_row}>=1.5, AZ{last_row}/R{last_row}>=1.5), 1, 0),IF(OR(AZ{last_row}/Q{last_row}>=1.5, AZ{last_row}/R{last_row}>=1.5, AZ{last_row}/1.3>=1.5), 1, 0)),IF(R{last_row}>=1.1,IF(OR(AZ{last_row}/Q{last_row}>=1.5, AZ{last_row}/R{last_row}>=1.5), 1, 0),IF(OR(AZ{last_row}/Q{last_row}>=1.5, AZ{last_row}/R{last_row}>=1.5, AZ{last_row}/1.1>=1.5), 1, 0))))'
         
@@ -615,6 +615,7 @@ elif mode == "AKI prediction":
             
                 except Exception as e:
                     st.error(f"Error processing your request: {e}")
+
 
 
 
