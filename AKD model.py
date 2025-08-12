@@ -208,7 +208,7 @@ def save_to_gsheet(data, sheet_name):
         row[47] = f'=IF(AT{last_row}="", "", AT{last_row} - AS{last_row})'
         row[53] = f'=IFNA(IF(MAX(FILTER(lab_data!H:H, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 14)))=0, "", MAX(FILTER(lab_data!H:H, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 14)))), "")'
         row[54] = f'=IF(BB{last_row}="", "", IF(D{last_row}=0, IF(BB{last_row}<=0.7, 141*((BB{last_row}/0.7)^-0.329)*0.993^E{last_row}*1.018, 141*((BB{last_row}/0.7)^-1.209)*0.993^E{last_row}*1.018), IF(BB{last_row}<=0.9, 141*((BB{last_row}/0.9)^-0.411)*0.993^E{last_row}, 141*((BB{last_row}/0.9)^-1.209)*0.993^E{last_row})))'
-        row[56] = f'=IF(BB{last_row}="", "", IF(D{last_row}=1,IF(R{last_row}>=1.3,IF(OR(BB{last_row}/Q{last_row}>=1.5, BB{last_row}/R{last_row}>=1.5), 1, 0),IF(OR(BB{last_row}/Q{last_row}>=1.5, BB{last_row}/R{last_row}>=1.5, BB{last_row}/1.3>=1.5), 1, 0)),IF(R{last_row}>=1.1,IF(OR(BB{last_row}/Q{last_row}>=1.5, BB{last_row}/R{last_row}>=1.5), 1, 0),IF(OR(BB{last_row}/Q{last_row}>=1.5, BB{last_row}/R{last_row}>=1.5, BB{last_row}/1.1>=1.5), 1, 0))))'
+        row[56] = f'=IF(BB{last_row}="", 0, IF(D{last_row}=1,IF(R{last_row}>=1.3,IF(OR(BB{last_row}/Q{last_row}>=1.5, BB{last_row}/R{last_row}>=1.5), 1, 0),IF(OR(BB{last_row}/Q{last_row}>=1.5, BB{last_row}/R{last_row}>=1.5, BB{last_row}/1.3>=1.5), 1, 0)),IF(R{last_row}>=1.1,IF(OR(BB{last_row}/Q{last_row}>=1.5, BB{last_row}/R{last_row}>=1.5), 1, 0),IF(OR(BB{last_row}/Q{last_row}>=1.5, BB{last_row}/R{last_row}>=1.5, BB{last_row}/1.1>=1.5), 1, 0))))'
         
         # AKI_history判定
         # 取得目前病人 ID 和給藥日期
@@ -611,6 +611,7 @@ elif mode == "AKI prediction":
             
                 except Exception as e:
                     st.error(f"Error processing your request: {e}")
+
 
 
 
