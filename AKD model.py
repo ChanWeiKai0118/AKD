@@ -547,7 +547,7 @@ elif mode == "AKD prediction":
                         dose_adjustments = [100, 90, 80, 70]
                         prediction_results = {}
                         for percentage in dose_adjustments:
-                            st.markdown(f"#### Dose at {percentage}%")
+                            st.markdown(f"##### Dose at {percentage}%") #五級標題
                             input_data_modified = input_data.copy() #複製原本資料
                             if dose_type == 'Cisplatin':
                                     dose_percentage = input_data_modified.loc[last_row_index, 'dose_percentage']
@@ -708,6 +708,7 @@ elif mode == "AKI prediction":
             
                 except Exception as e:
                     st.error(f"Error processing your request: {e}")
+
 
 
 
