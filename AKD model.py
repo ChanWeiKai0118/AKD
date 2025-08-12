@@ -512,6 +512,7 @@ elif mode == "AKD prediction":
                         elif pd.notna(original_carb_dose) and original_carb_dose > 0:
                             dose_type = 'Carboplatin'
 
+                        dose_percentage = input_data.loc[last_row_index, 'dose_percentage']
                         # 在傳入 preprocessing 前，移除 'carb_dose'
                         input_data_pred = input_data.drop(columns=['carb_dose','dose_percentage','cis_cycle'])
                         
@@ -538,8 +539,9 @@ elif mode == "AKD prediction":
                         flat_prob = y_prob[valid_indices]
                         last_prob = flat_prob[-1] * 100
             
-                        st.subheader(f"Predicted AKD Risk: {last_prob:.2f}%")
+                        st.subheader(f"Predicted AKD Risk: {last_prob:.2f}% (with dose {dose_percentage}%)")
 
+                        st.markdown("---")
                         # Step 5:針對不同百分比劑量進行預測
                         dose_adjustments = [100, 90, 80, 70]
                         prediction_results = {}
@@ -548,7 +550,7 @@ elif mode == "AKD prediction":
                             input_data_modified = input_data.copy() #複製原本資料
                             if dose_type == 'Cisplatin':
                                     dose_percentage = input_data_modified.loc[last_row_index, 'dose_percentage']
-                                    new_cis_dose = original_cis_dose / dose_percentage * (percentage / 100)
+                                    new_cis_dose = original_cis_dose / dose_percentage * percentage
                                     input_data_modified.loc[last_row_index, 'cis_dose'] = new_cis_dose
                                     # 更新累積劑量 (假設累積劑量是前一筆加上本次劑量)
                                     previous_cis_cum_dose = input_data_modified.loc[last_row_index - 1, 'cis_cum_dose'] if last_row_index > 0 else 0
@@ -581,7 +583,7 @@ elif mode == "AKD prediction":
                             elif dose_type == 'Carboplatin':
                                     # 調整 Carboplatin 相關劑量
                                     dose_percentage = input_data_modified.loc[last_row_index, 'dose_percentage']
-                                    new_carb_dose = original_carb_dose / dose_percentage * (percentage / 100)
+                                    new_carb_dose = original_carb_dose / dose_percentage * percentage
                                     input_data_modified.loc[last_row_index, 'carb_dose'] = new_carb_dose
                                     # 更新累積劑量 (假設累積劑量是前一筆加上本次劑量)
                                     previous_carb_cum_dose = input_data_modified.loc[last_row_index - 1, 'carb_cum_dose'] if last_row_index > 0 else 0
@@ -709,6 +711,7 @@ elif mode == "AKI prediction":
             
                 except Exception as e:
                     st.error(f"Error processing your request: {e}")
+
 
 
 
