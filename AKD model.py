@@ -273,7 +273,7 @@ st.markdown(
         <ol>
             <li>An increase of SCr levels by >1.5 folds over baseline or latest SCr</li>
             <li>An increase of SCr levels by >1.5 folds over the upper limit of normal value (ULN)</li>
-            <p style="margin-left: 20px;">(ULN: male 1.3, female 1.1)</p>
+            <p style="margin-left: 20px;">(ULN: male 1.3 mg/dL, female 1.1 mg/dL)</p>
         </ol>
         <p><strong>89-day AKD definition: (ADQI 2016)</strong></p>
         <ol>
@@ -282,6 +282,12 @@ st.markdown(
             <li>eGFR decrease by > 35% over baseline or latest eGFR</li>
             <li>SCr increase by > 50% over baseline or latest SCr</li>
         </ol>
+        <p><strong>※ Others</strong></p>
+        <ul>
+            <li>eGFR is calculated by CKD-EPI</li>
+            <li>Baseline SCr : the latest SCr within 30 days before the first cycle</li>
+            <li>Latest SCr : the latest SCr within 30 days before the current cycle</li>
+        </ul>
     </div>
     """,
     unsafe_allow_html=True
@@ -794,6 +800,7 @@ elif mode == "AKI prediction":
                                 
                 except Exception as e:
                     st.error(f"Error processing your request: {e}")
+
 
 
 
