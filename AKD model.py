@@ -542,6 +542,8 @@ elif mode == "AKD prediction":
                         st.subheader(f"Predicted AKD Risk: {last_prob:.2f}% (with dose {dose_percentage}%)")
 
                         st.markdown("---")
+                        st.subheader("Percentages with Dose Modification")
+                        
                         # Step 5:針對不同百分比劑量進行預測
                         dose_adjustments = [100, 90, 80, 70]
                         prediction_results = {}
@@ -612,10 +614,6 @@ elif mode == "AKD prediction":
                                     st.write(f"Carboplatin Dose: {new_carb_dose:.2f} mg")
                                     st.info(f"Predicted AKD Risk: **{last_prob:.2f}%**")
                         
-                        st.markdown("---")
-                        st.subheader("Summary of Prediction Results")
-                        for label, prob in prediction_results.items():
-                            st.write(f"Dose at {label}: **{prob:.2f}%** risk")
                             
                 except Exception as e:
                     st.error(f"Error processing your request: {e}")
@@ -711,6 +709,7 @@ elif mode == "AKI prediction":
             
                 except Exception as e:
                     st.error(f"Error processing your request: {e}")
+
 
 
 
