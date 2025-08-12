@@ -748,7 +748,7 @@ elif mode == "AKI prediction":
                                         cols_for_preprocessing=cols_for_preprocessing,
                                         groupby_col='id_no',
                                         selected_features=selected_features,
-                                        outcome='akd',
+                                        outcome='aki',
                                         maxlen=6
                                     )
                                     y_prob = model.predict(X_test).squeeze().flatten()
@@ -779,7 +779,7 @@ elif mode == "AKI prediction":
                                         cols_for_preprocessing=cols_for_preprocessing,
                                         groupby_col='id_no',
                                         selected_features=selected_features,
-                                        outcome='akd',
+                                        outcome='aki',
                                         maxlen=6
                                     )
                                     y_prob = model.predict(X_test).squeeze().flatten()
@@ -794,6 +794,7 @@ elif mode == "AKI prediction":
                                 
                 except Exception as e:
                     st.error(f"Error processing your request: {e}")
+
 
 
 
