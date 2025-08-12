@@ -703,7 +703,7 @@ elif mode == "AKI prediction":
                             scaler=aki_normalizer,
                             imputer=aki_miceforest,
                             cols_for_preprocessing=aki_cols_for_preprocessing,
-                            groupby_col='id_no',  # or 'Number' if that's what you use
+                            groupby_col='id_no',  
                             selected_features=aki_selected_features,
                             outcome='aki',
                             maxlen=6
@@ -743,15 +743,15 @@ elif mode == "AKI prediction":
                                     
                                     X_test, y_test = preprocessing(
                                         data=input_data_modified_pred,
-                                        scaler=normalizer,
-                                        imputer=miceforest,
-                                        cols_for_preprocessing=cols_for_preprocessing,
+                                        scaler=aki_normalizer,
+                                        imputer=aki_miceforest,
+                                        cols_for_preprocessing=aki_cols_for_preprocessing,
                                         groupby_col='id_no',
-                                        selected_features=selected_features,
+                                        selected_features=aki_selected_features,
                                         outcome='aki',
                                         maxlen=6
                                     )
-                                    y_prob = model.predict(X_test).squeeze().flatten()
+                                    y_prob = aki_model.predict(X_test).squeeze().flatten()
                                     sample_weight = (y_test != -1).astype(float).flatten()
                                     valid_indices = sample_weight > 0
                                     flat_prob = y_prob[valid_indices]
@@ -774,15 +774,15 @@ elif mode == "AKI prediction":
                                     
                                     X_test, y_test = preprocessing(
                                         data=input_data_modified_pred,
-                                        scaler=normalizer,
-                                        imputer=miceforest,
-                                        cols_for_preprocessing=cols_for_preprocessing,
+                                        scaler=aki_normalizer,
+                                        imputer=aki_miceforest,
+                                        cols_for_preprocessing=aki_cols_for_preprocessing,
                                         groupby_col='id_no',
-                                        selected_features=selected_features,
+                                        selected_features=aki_selected_features,
                                         outcome='aki',
                                         maxlen=6
                                     )
-                                    y_prob = model.predict(X_test).squeeze().flatten()
+                                    y_prob = aki_model.predict(X_test).squeeze().flatten()
                                     sample_weight = (y_test != -1).astype(float).flatten()
                                     valid_indices = sample_weight > 0
                                     flat_prob = y_prob[valid_indices]
@@ -794,6 +794,7 @@ elif mode == "AKI prediction":
                                 
                 except Exception as e:
                     st.error(f"Error processing your request: {e}")
+
 
 
 
