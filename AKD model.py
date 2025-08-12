@@ -542,6 +542,7 @@ elif mode == "AKD prediction":
 
                         # Step 5:針對不同百分比劑量進行預測
                         dose_adjustments = [100, 90, 80, 70]
+                        prediction_results = {}
                         for percentage in dose_adjustments:
                             st.subheader(f"Dose at {percentage}%")
                             input_data_modified = input_data.copy() #複製原本資料
@@ -708,6 +709,7 @@ elif mode == "AKI prediction":
             
                 except Exception as e:
                     st.error(f"Error processing your request: {e}")
+
 
 
 
