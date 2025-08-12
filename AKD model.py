@@ -206,9 +206,12 @@ def save_to_gsheet(data, sheet_name):
         row[45] = f'=IFNA(INDEX(lab_data!N:N, MATCH(1, (lab_data!A:A = B{last_row}) * (lab_data!E:E = MAX(FILTER(lab_data!E:E, (lab_data!A:A = B{last_row}) * (lab_data!E:E <= F{last_row}) * (lab_data!E:E >= F{last_row} - 30) * (lab_data!N:N <> "")))) * (lab_data!N:N <> ""), 0)), "")'
         row[46] = f'=IF(OR(AS{last_row}="",AV{last_row}=""),"",IF(AV{last_row}=0,0,AV{last_row}/DATEVALUE(INDEX(lab_data!$E:$E,MATCH(1,(lab_data!$A:$A=$B{last_row})*(lab_data!$E:$E=MAX(FILTER(lab_data!$E:$E,(lab_data!$A:$A=$B{last_row})*(lab_data!$E:$E<=$F{last_row})*(lab_data!N:N<>""))))*(lab_data!N:N<>""),0))-XLOOKUP(AS{last_row},FILTER(lab_data!N:N,(lab_data!$A:$A=$B{last_row})*(lab_data!$E:$E<=$F{last_row})),FILTER(lab_data!$E:$E,(lab_data!$A:$A=$B{last_row})*(lab_data!$E:$E<=$F{last_row})),"Not found"))))'
         row[47] = f'=IF(AT{last_row}="", "", AT{last_row} - AS{last_row})'
-        row[53] = f'=IFNA(IF(MAX(FILTER(lab_data!H:H, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 14)))=0, "", MAX(FILTER(lab_data!H:H, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 14)))), "")'
-        row[54] = f'=IF(BB{last_row}="", "", IF(D{last_row}=0, IF(BB{last_row}<=0.7, 141*((BB{last_row}/0.7)^-0.329)*0.993^E{last_row}*1.018, 141*((BB{last_row}/0.7)^-1.209)*0.993^E{last_row}*1.018), IF(BB{last_row}<=0.9, 141*((BB{last_row}/0.9)^-0.411)*0.993^E{last_row}, 141*((BB{last_row}/0.9)^-1.209)*0.993^E{last_row})))'
-        row[56] = f'=IF(BB{last_row}="", 0, IF(D{last_row}=1,IF(R{last_row}>=1.3,IF(OR(BB{last_row}/Q{last_row}>=1.5, BB{last_row}/R{last_row}>=1.5), 1, 0),IF(OR(BB{last_row}/Q{last_row}>=1.5, BB{last_row}/R{last_row}>=1.5, BB{last_row}/1.3>=1.5), 1, 0)),IF(R{last_row}>=1.1,IF(OR(BB{last_row}/Q{last_row}>=1.5, BB{last_row}/R{last_row}>=1.5), 1, 0),IF(OR(BB{last_row}/Q{last_row}>=1.5, BB{last_row}/R{last_row}>=1.5, BB{last_row}/1.1>=1.5), 1, 0))))'
+        row[48] = f'=IFNA(IF(MAX(FILTER(lab_data!H:H, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 89)))=0, "", MAX(FILTER(lab_data!H:H, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 89)))), "")'
+        
+        row[50] = f'=IF(AW{last_row}="", "", IF(D{last_row}=0, IF(AW{last_row}<=0.7, 141*((AW{last_row}/0.7)^-0.329)*0.993^E{last_row}*1.018, 141*((AW{last_row}/0.7)^-1.209)*0.993^E{last_row}*1.018), IF(AW{last_row}<=0.9, 141*((AW{last_row}/0.9)^-0.411)*0.993^E{last_row}, 141*((AW{last_row}/0.9)^-1.209)*0.993^E{last_row})))'
+        row[51] = f'=IFNA(IF(MAX(FILTER(lab_data!H:H, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 14)))=0, "", MAX(FILTER(lab_data!H:H, (lab_data!A:A = B{last_row}) * (lab_data!E:E > F{last_row}) * (lab_data!E:E <= F{last_row} + 14)))), "")'
+        row[53] = f'=IF(AZ{last_row}="", "", IF(D{last_row}=0, IF(AZ{last_row}<=0.7, 141*((AZ{last_row}/0.7)^-0.329)*0.993^E{last_row}*1.018, 141*((AZ{last_row}/0.7)^-1.209)*0.993^E{last_row}*1.018), IF(AZ{last_row}<=0.9, 141*((AZ{last_row}/0.9)^-0.411)*0.993^E{last_row}, 141*((AZ{last_row}/0.9)^-1.209)*0.993^E{last_row})))'
+        row[55] = f'=IF(AZ{last_row}="", 0, IF(D{last_row}=1,IF(R{last_row}>=1.3,IF(OR(AZ{last_row}/Q{last_row}>=1.5, AZ{last_row}/R{last_row}>=1.5), 1, 0),IF(OR(AZ{last_row}/Q{last_row}>=1.5, AZ{last_row}/R{last_row}>=1.5, AZ{last_row}/1.3>=1.5), 1, 0)),IF(R{last_row}>=1.1,IF(OR(AZ{last_row}/Q{last_row}>=1.5, AZ{last_row}/R{last_row}>=1.5), 1, 0),IF(OR(AZ{last_row}/Q{last_row}>=1.5, AZ{last_row}/R{last_row}>=1.5, AZ{last_row}/1.1>=1.5), 1, 0))))'
         
         # AKI_history判定
         # 取得目前病人 ID 和給藥日期
@@ -217,13 +220,13 @@ def save_to_gsheet(data, sheet_name):
         checkbox_checked = data[9]
         has_aki_history = False
         for r in reversed(all_rows[1:]):  # 從最新資料往回找
-            if r[1] == current_id and r[5] < current_date and r[56] == "1":  # 注意：從 Google Sheet 抓下來是字串
+            if r[1] == current_id and r[5] < current_date and r[55] == "1":  # 注意：從 Google Sheet 抓下來是字串
                 has_aki_history = True
                 break
         if data[9] or has_aki_history : 
-            row[55] = 1
+            row[54] = 1
         else :
-            row[55] = 0  # UI 有勾 or 過去有 AKI 就是 1
+            row[54] = 0  # UI 有勾 or 過去有 AKI 就是 1
         
         return row
 
@@ -611,6 +614,7 @@ elif mode == "AKI prediction":
             
                 except Exception as e:
                     st.error(f"Error processing your request: {e}")
+
 
 
 
