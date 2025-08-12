@@ -254,6 +254,31 @@ st.image(
     width=800
 )
 
+# --- 新增的備註欄 ---
+st.markdown(
+    """
+    <div style="background-color: #f0f2f6; padding: 15px; border-radius: 10px; border: 1px solid #e6e9ef;">
+        <h2 style="color: #333; text-align: center;">Definitions</h2>
+        <p><strong>14-day AKI definition: (CTCAE 5.0)</strong></p>
+        <ol>
+            <li>An increase of SCr levels by >1.5 folds over baseline or latest SCr</li>
+            <li>An increase of SCr levels by >1.5 folds over the upper limit of normal value (ULN)</li>
+            <p style="margin-left: 20px;">(ULN: male 1.3, female 1.1)</p>
+        </ol>
+        <p><strong>89-day AKD definition: (ADQI 2016)</strong></p>
+        <ol>
+            <li>AKI</li>
+            <li>eGFR drops to < 60 post chemotherapy (eGFR>60 before chemotherapy)</li>
+            <li>eGFR decrease by > 35% over baseline or latest eGFR</li>
+            <li>SCr increase by > 50% over baseline or latest SCr</li>
+        </ol>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+
+
 # --- 第一個 Streamlit UI (檢驗數據) ---
 st.markdown(
     """
@@ -586,6 +611,7 @@ elif mode == "AKI prediction":
             
                 except Exception as e:
                     st.error(f"Error processing your request: {e}")
+
 
 
 
