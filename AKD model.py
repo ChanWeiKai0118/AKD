@@ -248,6 +248,10 @@ def save_to_gsheet(data, sheet_name):
         sheet.append_row(row, value_input_option="USER_ENTERED")
 
 
+st.image(
+    "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/AKI_AKD_prediction.jpg",
+    width=800
+)
 
 # --- 第一個 Streamlit UI (檢驗數據) ---
 st.markdown(
@@ -580,4 +584,5 @@ elif mode == "AKI prediction":
             
                 except Exception as e:
                     st.error(f"Error processing your request: {e}")
+
 
