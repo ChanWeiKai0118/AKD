@@ -336,7 +336,7 @@ if mode == "Input data mode":
     
     with col3:
         lab_number = st.text_input("Patient ID (lab data)")
-        weight_lab = st.number_input("Weight (kg) - Lab", min_value=0.0, format="%.1f")
+        weight_lab = st.number_input("Weight (kg) ", min_value=0.0, format="%.1f")
         lab_date = st.date_input("Date", datetime.date.today())
     
     with col4:
@@ -764,6 +764,7 @@ elif mode == "Prediction mode":
 
             except Exception as e:
                 st.error(f"Error processing your request: {e}")
+
 
 
 
