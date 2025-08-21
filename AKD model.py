@@ -312,7 +312,7 @@ st.markdown(
 
 # ---google sheet超連結---
 sheet_url = "https://docs.google.com/spreadsheets/d/1G-o0659UDZQp2_CFEzty8mI0VXXYWzA0rc7v-Uz1ccc/edit?gid=0#gid=0"
-st.markdown(f"[👉 點這裡打開 Google Sheet]({sheet_url})", unsafe_allow_html=True)
+st.markdown(f"[👉 Open Google Sheet]({sheet_url})", unsafe_allow_html=True)
 
 # ---直接顯示google sheet---
 sheet_url = "https://docs.google.com/spreadsheets/d/1G-o0659UDZQp2_CFEzty8mI0VXXYWzA0rc7v-Uz1ccc/edit?gid=0#gid=0"
@@ -764,6 +764,7 @@ elif mode == "Prediction mode":
 
             except Exception as e:
                 st.error(f"Error processing your request: {e}")
+
 
 
 
