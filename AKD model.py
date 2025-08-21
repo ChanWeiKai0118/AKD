@@ -268,7 +268,7 @@ st.image(
 st.markdown(
     """
     <div style="background-color: #f0f2f6; padding: 15px; border-radius: 10px; border: 1px solid #e6e9ef;">
-        <h2 style="color: #333; text-align: center;">Definitions</h2>
+        <h2 style="color: #333; text-align: center;">Definitions & Setting</h2>
         <p><strong>14-day AKI definition: (CTCAE 5.0)</strong></p>
         <ol>
             <li>An increase of SCr levels by >1.5 folds over baseline or latest SCr</li>
@@ -289,14 +289,7 @@ st.markdown(
             <li>Latest SCr : the latest SCr within 30 days before the current cycle</li>
         </ul>
         <p><strong>※ Model probability grading (for reference)</strong></p>
-        <p><strong>AKD probability:</strong></p>
-        <ul>
-            <li><span style="color:green;">Very Low:</span> 0% ~ 16.7%</li>
-            <li><span style="color:green;">Low:</span> 16.7% ~ 21.1%</li>
-            <li><span style="color:orange;">Average:</span> 21.1% ~ 27.5%</li>
-            <li><span style="color:red;">High:</span> 27.5% ~ 49.0%</li>
-            <li><span style="color:red;">Very High:</span> 49.0% ~ 100%</li>
-        </ul>
+
 
         <p><strong>AKI probability:</strong></p>
         <ul>
@@ -741,6 +734,7 @@ elif mode == "Prediction mode":
 
             except Exception as e:
                 st.error(f"Error processing your request: {e}")
+
 
 
 
