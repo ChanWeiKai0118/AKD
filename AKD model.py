@@ -293,7 +293,11 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+sheet_url = "https://docs.google.com/spreadsheets/d/1G-o0659UDZQp2_CFEzty8mI0VXXYWzA0rc7v-Uz1ccc/edit?gid=0#gid=0"
+st.markdown(f"[👉 點這裡打開 Google Sheet]({sheet_url})", unsafe_allow_html=True)
 
+sheet_url = "https://docs.google.com/spreadsheets/d/1G-o0659UDZQp2_CFEzty8mI0VXXYWzA0rc7v-Uz1ccc/edit?gid=0#gid=0"
+st.components.v1.iframe(sheet_url, width=1000, height=600)
 
 # --- 第一個 Streamlit UI (檢驗數據) ---
 st.markdown(
@@ -800,6 +804,7 @@ elif mode == "AKI prediction":
                                 
                 except Exception as e:
                     st.error(f"Error processing your request: {e}")
+
 
 
 
