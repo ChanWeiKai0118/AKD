@@ -289,8 +289,14 @@ st.markdown(
             <li>Latest SCr : the latest SCr within 30 days before the current cycle</li>
         </ul>
         <p><strong>※ Model probability grading (for reference)</strong></p>
-
-
+        <p><strong>AKD probability:</strong></p>
+        <ul>
+            <li><span style="color:green;">Very Low:</span> 0% ~ 16.7%</li>
+            <li><span style="color:green;">Low:</span> 16.7% ~ 21.1%</li>
+            <li><span style="color:orange;">Average:</span> 21.1% ~ 27.5%</li>
+            <li><span style="color:red;">High:</span> 27.5% ~ 49.0%</li>
+            <li><span style="color:red;">Very High:</span> 49.0% ~ 100%</li>
+        </ul>
         <p><strong>AKI probability:</strong></p>
         <ul>
             <li><span style="color:green;">Very Low:</span> 0% ~ 0.4%</li>
@@ -734,6 +740,7 @@ elif mode == "Prediction mode":
 
             except Exception as e:
                 st.error(f"Error processing your request: {e}")
+
 
 
 
