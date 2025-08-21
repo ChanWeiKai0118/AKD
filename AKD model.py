@@ -374,6 +374,8 @@ elif mode == "Check data mode":
 # AKD Prediction Function
 # =======================
 def run_prediction_AKD(selected_rows):
+    # AKD columns
+    # 加入'carb_dose','dose_percentage','cis_cycle'方便後續做劑量調整
     target_columns = [
         'id_no', 'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
         'average_cis_cum_dose', 'carb_dose','carb_cum_dose', 'baseline_hemoglobin', 
@@ -397,11 +399,12 @@ def run_prediction_AKD(selected_rows):
         'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
         'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history'
     ]
-
+    # === 讀取 Google Sheet 資料 ===
     input_data = selected_rows[target_columns].apply(pd.to_numeric, errors='coerce')
     input_data.reset_index(drop=True, inplace=True)
     input_data.loc[input_data.index[-1], 'akd'] = 0  # outcome column
-
+    
+    # 取得原本資料是用cisplatin or carboplatin
     last_row_index = input_data.index[-1]
     original_cis_dose = input_data.loc[last_row_index, 'cis_dose']
     original_carb_dose = input_data.loc[last_row_index, 'carb_dose']
@@ -413,8 +416,12 @@ def run_prediction_AKD(selected_rows):
     else:
         dose_type = None
 
-    # Preprocess
+    # 儲存預測那筆資料的dose percentage
+    dose_percentage = input_data.loc[last_row_index, 'dose_percentage']
+    # 在傳入 preprocessing 前，移除 'carb_dose','dose_percentage','cis_cycle'
     input_data_pred = input_data.drop(columns=['carb_dose','dose_percentage','cis_cycle'])
+
+    # preprocessing
     normalizer = get_scaler()
     miceforest = get_imputer()
     X_test, y_test = preprocessing(
@@ -428,13 +435,15 @@ def run_prediction_AKD(selected_rows):
         maxlen=6
     )
     model = get_model()
+
+    # 过滤掉 padding 数据
     y_prob = model.predict(X_test).squeeze().flatten()
     sample_weight = (y_test != -1).astype(float).flatten()
     valid_indices = sample_weight > 0
     flat_prob = y_prob[valid_indices]
     last_prob = flat_prob[-1] * 100
 
-    # Dose modification
+    # 針對不同百分比劑量進行預測
     dose_adjustments = [100, 90, 80, 70]
     prediction_results = {}
     for percentage in dose_adjustments:
@@ -475,6 +484,8 @@ def run_prediction_AKD(selected_rows):
 # AKI Prediction Function
 # =======================
 def run_prediction_AKI(selected_rows):
+    #AKI columns
+    # 加入'carb_dose','dose_percentage','cis_cycle'方便後續做劑量調整
     target_columns = [
         'id_no', 'age', 'cis_dose', 'cis_cum_dose', 'average_cis_cum_dose',
         'carb_dose','carb_cum_dose', 'baseline_hemoglobin', 'baseline_bun/scr', 'baseline_egfr',
@@ -496,11 +507,13 @@ def run_prediction_AKI(selected_rows):
         'latest_potassium', 'bun_change', 'bun/scr_change', 'crcl_change',
         'bun/scr_slope', 'crcl_slope', 'aki_history'
     ]
-
+    
+    # === 讀取 Google Sheet 資料 ===
     input_data = selected_rows[target_columns].apply(pd.to_numeric, errors='coerce')
     input_data.reset_index(drop=True, inplace=True)
     input_data.loc[input_data.index[-1], 'aki'] = 0
-
+    
+    # 取得原本資料是用cisplatin or carboplatin
     last_row_index = input_data.index[-1]
     original_cis_dose = input_data.loc[last_row_index, 'cis_dose']
     original_carb_dose = input_data.loc[last_row_index, 'carb_dose']
@@ -512,8 +525,12 @@ def run_prediction_AKI(selected_rows):
     else:
         dose_type = None
 
-    # Preprocess
+    # 儲存預測那筆資料的dose percentage
+    dose_percentage = input_data.loc[last_row_index, 'dose_percentage']
+    # 在傳入 preprocessing 前，移除 'carb_dose','dose_percentage','cis_cycle'
     input_data_pred = input_data.drop(columns=['carb_dose','dose_percentage','cis_cycle'])
+
+    # Preprocess
     normalizer = get_aki_scaler()
     miceforest = get_aki_imputer()
     X_test, y_test = preprocessing(
@@ -527,13 +544,15 @@ def run_prediction_AKI(selected_rows):
         maxlen=6
     )
     model = get_aki_model()
+    
+    # 过滤掉 padding 数据
     y_prob = model.predict(X_test).squeeze().flatten()
     sample_weight = (y_test != -1).astype(float).flatten()
     valid_indices = sample_weight > 0
     flat_prob = y_prob[valid_indices]
     last_prob = flat_prob[-1] * 100
 
-    # Dose modification
+    # 針對不同百分比劑量進行預測
     dose_adjustments = [100, 90, 80, 70]
     prediction_results = {}
     for percentage in dose_adjustments:
@@ -670,9 +689,12 @@ elif mode == "Prediction mode":
                 headers = raw_values[0]
                 data = raw_values[1:]
                 df = pd.DataFrame(data, columns=headers)
-
+                
+                # === 找到該筆預測的 row ===
                 df_patient = df[df['Number'] == input_number]
                 df_patient = df_patient.sort_values(by='Index_date 1(dose)')
+
+                # 找到最接近輸入日期的 row
                 selected_row = df_patient[df_patient['Index_date 1(dose)'] == input_date_str]
 
                 if selected_row.empty:
@@ -680,7 +702,8 @@ elif mode == "Prediction mode":
                 else:
                     target_index = selected_row.index[0]
                     selected_rows = df_patient.loc[:target_index].tail(6)
-
+                    
+                    # 顯示預測用資料
                     st.subheader("Data for Prediction")
                     st.dataframe(selected_rows)
 
@@ -700,6 +723,7 @@ elif mode == "Prediction mode":
 
             except Exception as e:
                 st.error(f"Error processing your request: {e}")
+
 
 
 
