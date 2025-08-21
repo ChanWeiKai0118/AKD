@@ -288,7 +288,7 @@ st.markdown(
             <li>Baseline SCr : the latest SCr within 30 days before the first cycle</li>
             <li>Latest SCr : the latest SCr within 30 days before the current cycle</li>
         </ul>
-        <p><strong>Model probability grading (for reference)</strong></p>
+        <p><strong>※ Model probability grading (for reference)</strong></p>
         <p><strong>AKD probability:</strong></p>
         <ul>
             <li><span style="color:green;">Very Low:</span> 0% ~ 16.7%</li>
@@ -741,6 +741,7 @@ elif mode == "Prediction mode":
 
             except Exception as e:
                 st.error(f"Error processing your request: {e}")
+
 
 
 
