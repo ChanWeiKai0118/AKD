@@ -273,7 +273,7 @@ st.markdown(
         <ol>
             <li>An increase of SCr levels by >1.5 folds over baseline or latest SCr</li>
             <li>An increase of SCr levels by >1.5 folds over the upper limit of normal value (ULN)</li>
-            <p style="margin-left: 20px;">(ULN: male 1.3, female 1.1)</p>
+            <p style="margin-left: 20px;">(ULN: male 1.3 mg/dL, female 1.1 mg/dL)</p>
         </ol>
         <p><strong>89-day AKD definition: (ADQI 2016)</strong></p>
         <ol>
@@ -282,12 +282,24 @@ st.markdown(
             <li>eGFR decrease by > 35% over baseline or latest eGFR</li>
             <li>SCr increase by > 50% over baseline or latest SCr</li>
         </ol>
+        <p><strong>※ Others</strong></p>
+        <ul>
+            <li>eGFR is calculated by CKD-EPI</li>
+            <li>Baseline SCr : the latest SCr within 30 days before the first cycle</li>
+            <li>Latest SCr : the latest SCr within 30 days before the current cycle</li>
+        </ul>
     </div>
     """,
     unsafe_allow_html=True
 )
 
+# ---google sheet超連結---
+sheet_url = "https://docs.google.com/spreadsheets/d/1G-o0659UDZQp2_CFEzty8mI0VXXYWzA0rc7v-Uz1ccc/edit?gid=0#gid=0"
+st.markdown(f"[👉 點這裡打開 Google Sheet]({sheet_url})", unsafe_allow_html=True)
 
+# ---直接顯示google sheet---
+sheet_url = "https://docs.google.com/spreadsheets/d/1G-o0659UDZQp2_CFEzty8mI0VXXYWzA0rc7v-Uz1ccc/edit?gid=0#gid=0"
+st.components.v1.iframe(sheet_url, width=1000, height=600)
 
 # --- 第一個 Streamlit UI (檢驗數據) ---
 st.markdown(
@@ -448,13 +460,14 @@ elif mode == "AKD prediction":
         if st.button("AKD prediction"):
             if input_number and input_date_str:
                 try:
-                    #AKD columns
+                    # AKD columns
+                    # 加入'carb_dose','dose_percentage','cis_cycle'方便後續做劑量調整
                     target_columns = [
                         'id_no', 'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
-                        'average_cis_cum_dose', 'carb_cum_dose', 'baseline_hemoglobin',
+                        'average_cis_cum_dose', 'carb_dose','carb_cum_dose', 'baseline_hemoglobin', 
                         'baseline_bun', 'baseline_bun/scr', 'baseline_egfr', 'baseline_sodium',
                         'baseline_potassium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
-                        'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history']
+                        'bun_change', 'crcl_change', 'bun/scr_slope', 'crcl_slope', 'aki_history','dose_percentage','cis_cycle']
                     cols_for_preprocessing = [
                         'id_no', 'age', 'treatment_duration', 'cis_dose', 'cis_cum_dose',
                         'average_cis_cum_dose', 'carb_cum_dose', 'baseline_hemoglobin',
@@ -501,16 +514,29 @@ elif mode == "AKD prediction":
                         
                         #加上akd
                         input_data.loc[input_data.index[-1], 'akd'] = 0
+
+                        # 取得原本資料是用cisplatin or carboplatin
+                        last_row_index = input_data.index[-1]
+                        original_cis_dose = input_data.loc[last_row_index, 'cis_dose']
+                        original_carb_dose = input_data.loc[last_row_index, 'carb_dose']
+                        if pd.notna(original_cis_dose) and original_cis_dose > 0:
+                            dose_type = 'Cisplatin'
+                        elif pd.notna(original_carb_dose) and original_carb_dose > 0:
+                            dose_type = 'Carboplatin'
+
+                        dose_percentage = input_data.loc[last_row_index, 'dose_percentage']
+                        # 在傳入 preprocessing 前，移除 'carb_dose'
+                        input_data_pred = input_data.drop(columns=['carb_dose','dose_percentage','cis_cycle'])
                         
                         #進行imputation和scaler
                         normalizer = get_scaler()
                         miceforest = get_imputer()
                         X_test, y_test = preprocessing(
-                            data=input_data,
+                            data=input_data_pred,
                             scaler=normalizer,
                             imputer=miceforest,
                             cols_for_preprocessing=cols_for_preprocessing,
-                            groupby_col='id_no',  # or 'Number' if that's what you use
+                            groupby_col='id_no', 
                             selected_features=selected_features,
                             outcome='akd',
                             maxlen=6
@@ -524,9 +550,82 @@ elif mode == "AKD prediction":
                         valid_indices = sample_weight > 0
                         flat_prob = y_prob[valid_indices]
                         last_prob = flat_prob[-1] * 100
-            
-                        st.subheader(f"Predicted AKD Risk: {last_prob:.2f}%")
-            
+                        st.markdown(f"### Predicted AKD Risk: <span style='color:red;'>{last_prob:.2f}%</span> (dose at {dose_percentage}%)", unsafe_allow_html=True)
+
+                        st.markdown("---")
+                        st.subheader("Percentages with Dose Modification")
+                        
+                        # Step 5:針對不同百分比劑量進行預測
+                        dose_adjustments = [100, 90, 80, 70]
+                        prediction_results = {}
+                        for percentage in dose_adjustments:
+                            st.markdown(f"##### Dose at {percentage}%") #五級標題
+                            input_data_modified = input_data.copy() #複製原本資料
+                            if dose_type == 'Cisplatin':
+                                    dose_percentage = input_data_modified.loc[last_row_index, 'dose_percentage']
+                                    new_cis_dose = original_cis_dose / dose_percentage * percentage
+                                    input_data_modified.loc[last_row_index, 'cis_dose'] = new_cis_dose
+                                    # 更新累積劑量 (假設累積劑量是前一筆加上本次劑量)
+                                    previous_cis_cum_dose = input_data_modified.loc[last_row_index - 1, 'cis_cum_dose'] if last_row_index > 0 else 0
+                                    input_data_modified.loc[last_row_index, 'cis_cum_dose'] = previous_cis_cum_dose + new_cis_dose
+                                    cis_cycle = input_data_modified.loc[last_row_index, 'cis_cycle']
+                                    input_data_modified.loc[last_row_index, 'average_cis_cum_dose'] = input_data_modified.loc[last_row_index, 'cis_cum_dose'] / cis_cycle
+
+                                    # 在傳入 preprocessing 前，移除多的columns
+                                    input_data_modified_pred = input_data_modified.drop(columns=['carb_dose','dose_percentage','cis_cycle'])
+                                    
+                                    X_test, y_test = preprocessing(
+                                        data=input_data_modified_pred,
+                                        scaler=normalizer,
+                                        imputer=miceforest,
+                                        cols_for_preprocessing=cols_for_preprocessing,
+                                        groupby_col='id_no',
+                                        selected_features=selected_features,
+                                        outcome='akd',
+                                        maxlen=6
+                                    )
+                                    y_prob = model.predict(X_test).squeeze().flatten()
+                                    sample_weight = (y_test != -1).astype(float).flatten()
+                                    valid_indices = sample_weight > 0
+                                    flat_prob = y_prob[valid_indices]
+                                    last_prob = flat_prob[-1] * 100
+                                    
+                                    prediction_results[f'{percentage}%'] = last_prob
+                                    st.write(f"Cisplatin Dose: {new_cis_dose:.2f} mg")
+                                    st.info(f"Predicted AKD Risk: **{last_prob:.2f}%**")
+                            elif dose_type == 'Carboplatin':
+                                    # 調整 Carboplatin 相關劑量
+                                    dose_percentage = input_data_modified.loc[last_row_index, 'dose_percentage']
+                                    new_carb_dose = original_carb_dose / dose_percentage * percentage
+                                    input_data_modified.loc[last_row_index, 'carb_dose'] = new_carb_dose
+                                    # 更新累積劑量 (假設累積劑量是前一筆加上本次劑量)
+                                    previous_carb_cum_dose = input_data_modified.loc[last_row_index - 1, 'carb_cum_dose'] if last_row_index > 0 else 0
+                                    input_data_modified.loc[last_row_index, 'carb_cum_dose'] = previous_carb_cum_dose + new_carb_dose
+                                    
+                                    # 在傳入 preprocessing 前，移除 'carb_dose'
+                                    input_data_modified_pred = input_data_modified.drop(columns=['carb_dose','dose_percentage','cis_cycle'])
+                                    
+                                    X_test, y_test = preprocessing(
+                                        data=input_data_modified_pred,
+                                        scaler=normalizer,
+                                        imputer=miceforest,
+                                        cols_for_preprocessing=cols_for_preprocessing,
+                                        groupby_col='id_no',
+                                        selected_features=selected_features,
+                                        outcome='akd',
+                                        maxlen=6
+                                    )
+                                    y_prob = model.predict(X_test).squeeze().flatten()
+                                    sample_weight = (y_test != -1).astype(float).flatten()
+                                    valid_indices = sample_weight > 0
+                                    flat_prob = y_prob[valid_indices]
+                                    last_prob = flat_prob[-1] * 100
+                                    
+                                    prediction_results[f'{percentage}%'] = last_prob
+                                    st.write(f"Carboplatin Dose: {new_carb_dose:.2f} mg")
+                                    st.info(f"Predicted AKD Risk: **{last_prob:.2f}%**")
+                        
+                            
                 except Exception as e:
                     st.error(f"Error processing your request: {e}")
 
@@ -542,12 +641,13 @@ elif mode == "AKI prediction":
             if input_number_aki and input_date_aki_str:
                 try:
                     #AKI columns
+                    # 加入'carb_dose','dose_percentage','cis_cycle'方便後續做劑量調整
                     aki_target_columns = [
                         'id_no', 'age', 'cis_dose', 'cis_cum_dose', 'average_cis_cum_dose',
-                        'carb_cum_dose', 'baseline_hemoglobin', 'baseline_bun/scr', 'baseline_egfr',
+                        'carb_dose','carb_cum_dose', 'baseline_hemoglobin', 'baseline_bun/scr', 'baseline_egfr',
                         'baseline_sodium', 'latest_hemoglobin', 'latest_scr', 'latest_crcl',
                         'latest_potassium', 'bun_change', 'bun/scr_change', 'crcl_change',
-                        'bun/scr_slope', 'crcl_slope', 'aki_history']
+                        'bun/scr_slope', 'crcl_slope', 'aki_history','dose_percentage','cis_cycle']
                     aki_cols_for_preprocessing = [
                         'id_no', 'age', 'cis_dose', 'cis_cum_dose', 'average_cis_cum_dose',
                         'carb_cum_dose', 'baseline_hemoglobin', 'baseline_bun/scr', 'baseline_egfr',
@@ -591,18 +691,31 @@ elif mode == "AKI prediction":
                         input_data = input_data.apply(pd.to_numeric, errors='coerce')
                         input_data.reset_index(drop=True, inplace=True)
                         
-                        #加上akd
+                        #加上aki
                         input_data.loc[input_data.index[-1], 'aki'] = 0
+                        
+                        # 取得原本資料是用cisplatin or carboplatin
+                        last_row_index = input_data.index[-1]
+                        original_cis_dose = input_data.loc[last_row_index, 'cis_dose']
+                        original_carb_dose = input_data.loc[last_row_index, 'carb_dose']
+                        if pd.notna(original_cis_dose) and original_cis_dose > 0:
+                            dose_type = 'Cisplatin'
+                        elif pd.notna(original_carb_dose) and original_carb_dose > 0:
+                            dose_type = 'Carboplatin'
+
+                        dose_percentage = input_data.loc[last_row_index, 'dose_percentage']
+                        # 在傳入 preprocessing 前，移除 'carb_dose'
+                        input_data_pred = input_data.drop(columns=['carb_dose','dose_percentage','cis_cycle'])
                         
                         #進行imputation和scaler
                         aki_normalizer = get_aki_scaler()
                         aki_miceforest = get_aki_imputer()
                         X_test, y_test = preprocessing(
-                            data=input_data,
+                            data=input_data_pred,
                             scaler=aki_normalizer,
                             imputer=aki_miceforest,
                             cols_for_preprocessing=aki_cols_for_preprocessing,
-                            groupby_col='id_no',  # or 'Number' if that's what you use
+                            groupby_col='id_no',  
                             selected_features=aki_selected_features,
                             outcome='aki',
                             maxlen=6
@@ -616,11 +729,101 @@ elif mode == "AKI prediction":
                         valid_indices = sample_weight > 0
                         flat_prob = y_prob[valid_indices]
                         last_prob = flat_prob[-1] * 100
-            
-                        st.subheader(f"Predicted AKI Risk: {last_prob:.2f}%")
-            
+                        st.markdown(f"### Predicted AKI Risk: <span style='color:red;'>{last_prob:.2f}%</span> (dose at {dose_percentage}%)", unsafe_allow_html=True)
+
+                        st.markdown("---")
+                        st.subheader("Percentages with Dose Modification")
+                        
+                        # Step 5:針對不同百分比劑量進行預測
+                        dose_adjustments = [100, 90, 80, 70]
+                        prediction_results = {}
+                        for percentage in dose_adjustments:
+                            st.markdown(f"##### Dose at {percentage}%") #五級標題
+                            input_data_modified = input_data.copy() #複製原本資料
+                            if dose_type == 'Cisplatin':
+                                    dose_percentage = input_data_modified.loc[last_row_index, 'dose_percentage']
+                                    new_cis_dose = original_cis_dose / dose_percentage * percentage
+                                    input_data_modified.loc[last_row_index, 'cis_dose'] = new_cis_dose
+                                    # 更新累積劑量 (假設累積劑量是前一筆加上本次劑量)
+                                    previous_cis_cum_dose = input_data_modified.loc[last_row_index - 1, 'cis_cum_dose'] if last_row_index > 0 else 0
+                                    input_data_modified.loc[last_row_index, 'cis_cum_dose'] = previous_cis_cum_dose + new_cis_dose
+                                    cis_cycle = input_data_modified.loc[last_row_index, 'cis_cycle']
+                                    input_data_modified.loc[last_row_index, 'average_cis_cum_dose'] = input_data_modified.loc[last_row_index, 'cis_cum_dose'] / cis_cycle
+
+                                    # 在傳入 preprocessing 前，移除多的columns
+                                    input_data_modified_pred = input_data_modified.drop(columns=['carb_dose','dose_percentage','cis_cycle'])
+                                    
+                                    X_test, y_test = preprocessing(
+                                        data=input_data_modified_pred,
+                                        scaler=aki_normalizer,
+                                        imputer=aki_miceforest,
+                                        cols_for_preprocessing=aki_cols_for_preprocessing,
+                                        groupby_col='id_no',
+                                        selected_features=aki_selected_features,
+                                        outcome='aki',
+                                        maxlen=6
+                                    )
+                                    y_prob = aki_model.predict(X_test).squeeze().flatten()
+                                    sample_weight = (y_test != -1).astype(float).flatten()
+                                    valid_indices = sample_weight > 0
+                                    flat_prob = y_prob[valid_indices]
+                                    last_prob = flat_prob[-1] * 100
+                                    
+                                    prediction_results[f'{percentage}%'] = last_prob
+                                    st.write(f"Cisplatin Dose: {new_cis_dose:.2f} mg")
+                                    st.info(f"Predicted AKI Risk: **{last_prob:.2f}%**")
+                            elif dose_type == 'Carboplatin':
+                                    # 調整 Carboplatin 相關劑量
+                                    dose_percentage = input_data_modified.loc[last_row_index, 'dose_percentage']
+                                    new_carb_dose = original_carb_dose / dose_percentage * percentage
+                                    input_data_modified.loc[last_row_index, 'carb_dose'] = new_carb_dose
+                                    # 更新累積劑量 (假設累積劑量是前一筆加上本次劑量)
+                                    previous_carb_cum_dose = input_data_modified.loc[last_row_index - 1, 'carb_cum_dose'] if last_row_index > 0 else 0
+                                    input_data_modified.loc[last_row_index, 'carb_cum_dose'] = previous_carb_cum_dose + new_carb_dose
+                                    
+                                    # 在傳入 preprocessing 前，移除 'carb_dose'
+                                    input_data_modified_pred = input_data_modified.drop(columns=['carb_dose','dose_percentage','cis_cycle'])
+                                    
+                                    X_test, y_test = preprocessing(
+                                        data=input_data_modified_pred,
+                                        scaler=aki_normalizer,
+                                        imputer=aki_miceforest,
+                                        cols_for_preprocessing=aki_cols_for_preprocessing,
+                                        groupby_col='id_no',
+                                        selected_features=aki_selected_features,
+                                        outcome='aki',
+                                        maxlen=6
+                                    )
+                                    y_prob = aki_model.predict(X_test).squeeze().flatten()
+                                    sample_weight = (y_test != -1).astype(float).flatten()
+                                    valid_indices = sample_weight > 0
+                                    flat_prob = y_prob[valid_indices]
+                                    last_prob = flat_prob[-1] * 100
+                                    
+                                    prediction_results[f'{percentage}%'] = last_prob
+                                    st.write(f"Carboplatin Dose: {new_carb_dose:.2f} mg")
+                                    st.info(f"Predicted AKI Risk: **{last_prob:.2f}%**")
+                                
                 except Exception as e:
                     st.error(f"Error processing your request: {e}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
