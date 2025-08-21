@@ -258,13 +258,13 @@ def save_to_gsheet(data, sheet_name):
 
         sheet.append_row(row, value_input_option="USER_ENTERED")
 
-
+# === 圖片 ===
 st.image(
     "https://raw.githubusercontent.com/ChanWeiKai0118/AKD/main/AKI_AKD_prediction.jpg",
     width=800
 )
 
-# --- 新增的備註欄 ---
+# === 備註欄 ===
 st.markdown(
     """
     <div style="background-color: #f0f2f6; padding: 15px; border-radius: 10px; border: 1px solid #e6e9ef;">
@@ -309,7 +309,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
+# === Google sheet ===
 # ---google sheet超連結---
 sheet_url = "https://docs.google.com/spreadsheets/d/1G-o0659UDZQp2_CFEzty8mI0VXXYWzA0rc7v-Uz1ccc/edit?gid=0#gid=0"
 st.markdown(f"[👉 Open Google Sheet]({sheet_url})", unsafe_allow_html=True)
@@ -318,7 +318,7 @@ st.markdown(f"[👉 Open Google Sheet]({sheet_url})", unsafe_allow_html=True)
 sheet_url = "https://docs.google.com/spreadsheets/d/1G-o0659UDZQp2_CFEzty8mI0VXXYWzA0rc7v-Uz1ccc/edit?gid=0#gid=0"
 st.components.v1.iframe(sheet_url, width=1000, height=600)
 
-# --- 第一個 Streamlit UI (檢驗數據) ---
+# === 第一個 Streamlit UI (檢驗數據) ===
 st.markdown(
     """
     <div style="background-color: #d4f4dd; padding: 10px; border-radius: 8px;">
@@ -340,11 +340,11 @@ if mode == "Input data mode":
         lab_date = st.date_input("Date", datetime.date.today())
     
     with col4:
-        bun = st.number_input("BUN", min_value=0.0, value=None)
-        scr = st.number_input("Scr", min_value=0.00, format="%.2f", value=None)
-        hgb = st.number_input("Hgb", min_value=0.0, format="%.1f", value=None)
-        sodium = st.number_input("Sodium (N)", min_value=0, value=None)
-        potassium = st.number_input("Potassium (K)", min_value=0, value=None)
+        bun = st.number_input("BUN (mg/dL)", min_value=0.0, value=None)
+        scr = st.number_input("Scr (mg/dL)", min_value=0.00, format="%.2f", value=None)
+        hgb = st.number_input("Hgb (g/dL)", min_value=0.0, format="%.1f", value=None)
+        sodium = st.number_input("Sodium (mmol/L)", min_value=0, value=None)
+        potassium = st.number_input("Potassium (mmol/L)", min_value=0, value=None)
     
     if st.button("Submit Lab Data"):
         lab_date_str = lab_date.strftime("%Y/%m/%d")
@@ -630,7 +630,7 @@ def get_akd_color(prob):
         return "red"     # Very High
 
 
-# ---第二個 Streamlit UI ---
+# === 第二個 Streamlit UI ===
 st.markdown(
     """
     <div style="background-color: #FFFFE0; padding: 10px; border-radius: 8px;">
@@ -652,7 +652,7 @@ if mode == "Input mode":
         weight = st.number_input("Weight (kg)", min_value=0.0, format="%.1f")
         gender = st.selectbox("Gender", ["Male", "Female"])
         gender_value = 1 if gender == "Male" else 0
-        age = st.number_input("Age", min_value=0)
+        age = st.number_input("Age (years)", min_value=0)
         aki_history = st.checkbox("AKI History (Check if Yes)")
 
     with col2:
@@ -764,6 +764,7 @@ elif mode == "Prediction mode":
 
             except Exception as e:
                 st.error(f"Error processing your request: {e}")
+
 
 
 
