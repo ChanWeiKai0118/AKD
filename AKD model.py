@@ -605,6 +605,30 @@ def run_prediction_AKI(selected_rows):
 
     return last_prob, prediction_results, dose_percentage
 
+def get_aki_color(prob):
+    if prob <= 0.4:
+        return "green"   # Very Low
+    elif prob <= 4.8:
+        return "green"   # Low
+    elif prob <= 13.3:
+        return "orange"  # Average
+    elif prob <= 26.1:
+        return "red"     # High
+    else:
+        return "red"     # Very High
+
+def get_akd_color(prob):
+    if prob <= 16.7:
+        return "green"   # Very Low
+    elif prob <= 21.1:
+        return "green"   # Low
+    elif prob <= 27.5:
+        return "orange"  # Average
+    elif prob <= 49.0:
+        return "red"     # High
+    else:
+        return "red"     # Very High
+
 
 # ---第二個 Streamlit UI ---
 st.markdown(
@@ -727,19 +751,20 @@ elif mode == "Prediction mode":
                     # Run AKD
                     st.markdown("## 🧮 AKD Prediction")
                     akd_prob, akd_results,dose_percentage = run_prediction_AKD(selected_rows)
-                    st.markdown(f"### Predicted AKD Risk: <span style='color:red;'>{akd_prob:.2f}%</span>(dose at {dose_percentage}%)", unsafe_allow_html=True)
+                    st.markdown(f"### Predicted AKD Risk: <span style='color:{get_akd_color(akd_prob)};'>{akd_prob:.2f}%</span> (dose at {dose_percentage}%)",unsafe_allow_html=True)
                     for k, v in akd_results.items():
                         st.info(f"{k} dose → Predicted AKD Risk: **{v:.2f}%**")
 
                     # Run AKI
                     st.markdown("## 🧮 AKI Prediction")
                     aki_prob, aki_results,dose_percentage = run_prediction_AKI(selected_rows)
-                    st.markdown(f"### Predicted AKI Risk: <span style='color:red;'>{aki_prob:.2f}%</span>(dose at {dose_percentage}%)", unsafe_allow_html=True)
+                    st.markdown(f"### Predicted AKI Risk: <span style='color:{get_aki_color(aki_prob)};'>{aki_prob:.2f}%</span> (dose at {dose_percentage}%)",unsafe_allow_html=True)
                     for k, v in aki_results.items():
                         st.info(f"{k} dose → Predicted AKI Risk: **{v:.2f}%**")
 
             except Exception as e:
                 st.error(f"Error processing your request: {e}")
+
 
 
 
