@@ -477,7 +477,7 @@ def run_prediction_AKD(selected_rows):
         flat_prob = y_prob[valid_indices]
         prediction_results[f'{percentage}%'] = flat_prob[-1] * 100
 
-    return last_prob, prediction_results
+    return last_prob, prediction_results,dose_percentage
 
 
 # =======================
@@ -586,7 +586,7 @@ def run_prediction_AKI(selected_rows):
         flat_prob = y_prob[valid_indices]
         prediction_results[f'{percentage}%'] = flat_prob[-1] * 100
 
-    return last_prob, prediction_results
+    return last_prob, prediction_results, dose_percentage
 
 
 # ---第二個 Streamlit UI ---
@@ -723,6 +723,7 @@ elif mode == "Prediction mode":
 
             except Exception as e:
                 st.error(f"Error processing your request: {e}")
+
 
 
 
