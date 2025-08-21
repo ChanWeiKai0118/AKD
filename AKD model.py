@@ -367,89 +367,9 @@ elif mode == "Check data mode":
         else:
             st.warning("Please enter patient ID")
 
-# ---第二個 Streamlit UI ---
-st.markdown(
-    """
-    <div style="background-color: #FFFFE0; padding: 10px; border-radius: 8px;">
-        <h1 style="color: black; text-align: center;">Chemotherapy Data Entry</h1>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
 
-mode = st.radio("Select mode", options=["Input mode", "Check mode","Prediction mode"], horizontal=True)
 
-# 輸入模式
-if mode == "Input mode":
-    st.subheader("🔮 Input Mode")
-    col1, col2 = st.columns(2)
 
-    with col1:
-        number = st.text_input("Patient ID (chemotherapy data)", key="predict_id")
-        weight = st.number_input("Weight (kg)", min_value=0.0, format="%.1f")
-        gender = st.selectbox("Gender", ["Male", "Female"])
-        gender_value = 1 if gender == "Male" else 0
-        age = st.number_input("Age", min_value=0)
-        aki_history = st.checkbox("AKI History (Check if Yes)")
-
-    with col2:
-        treatment_date = st.date_input("Treatment Date", datetime.date.today())
-        cycle_no = st.number_input("Cycle Number", min_value=1)
-        cis_dose = st.number_input("Cisplatin Dose (mg)", min_value=0.0, format="%.1f")
-        carb_dose = st.number_input("Carboplatin Dose (mg)", min_value=0.0, format="%.1f")
-        dose_percentage = st.number_input("Dose percentage (%)", min_value=0, max_value=100)
-        
-    if st.button("Submit Chemo Data"):
-        treatment_date_str = treatment_date.strftime("%Y/%m/%d")
-        number = str(number).zfill(8)  # 強制補滿8位數
-        chemo_data_list = [
-            number, gender_value, weight, age, 
-            treatment_date_str, cycle_no, dose_percentage, cis_dose, carb_dose, aki_history 
-        ]
-    
-        # 回傳資料行、AKI 判定結果、病人 ID
-        row_to_write = save_to_gsheet(chemo_data_list, "chemo_data")
-
-        # 這裡才送出資料
-        sheet = get_gsheet_client().open("web data").worksheet("chemo_data")
-        sheet.append_row(row_to_write, value_input_option="USER_ENTERED")
-    
-        st.success("✅ Data submitted successfully!")
-        # 👉 顯示剛剛輸入的資料
-        chemo_df = pd.DataFrame([chemo_data_list], columns=['Number','Gender','Weight', 'Age','Date','Cycle','Dose percentage(%)','Cisplatin dose','Carboplatin dose','AKI history'])
-        st.subheader("🧾 Submitted Data")
-        st.dataframe(chemo_df)
-        
-        
-# -----------------------------
-# 預覽模式
-elif mode == "Check mode":
-    st.subheader("🗂️ Check Mode")
-    number_preview = st.text_input("Input patient ID", key="preview_id")
-    if st.button("Check Chemo Data"):
-        number_preview = str(number_preview).zfill(8)  # 強制補滿8位數
-        if number_preview:
-            try:
-                client = get_gsheet_client()
-                sheet = client.open("web data").worksheet("chemo_data")
-                all_data = sheet.get_all_records()
-                df = pd.DataFrame(all_data)
-                preview_cols = ['Number', 'weight', 'sex_male', 'age', 'Index_date 1(dose)', 'cis_cycle', 'carb_cycle', 'cis_dose','carb_dose','aki_history']
-                filtered_df = df[preview_cols]
-                # 👉 將 Number 欄位全部轉成補滿8位的字串格式
-                filtered_df['Number'] = filtered_df['Number'].astype(str).str.zfill(8)
-                filtered_df = filtered_df[filtered_df['Number'] == number_preview]
-                
-                if not filtered_df.empty:
-                    st.subheader(f"Patient information（ID: {number_preview}）")
-                    st.dataframe(filtered_df)
-                else:
-                    st.info("❗ The patient has no chemotherapy data")
-            except Exception as e:
-                st.error(f"Something wrong when loading Google Sheet ：{e}")
-        else:
-            st.warning("Please enter patient ID")
-# -----------------------------
 # =======================
 # AKD Prediction Function
 # =======================
@@ -650,10 +570,90 @@ def run_prediction_AKI(selected_rows):
     return last_prob, prediction_results
 
 
-# =======================
-# Main Streamlit App
-# =======================
+# ---第二個 Streamlit UI ---
+st.markdown(
+    """
+    <div style="background-color: #FFFFE0; padding: 10px; border-radius: 8px;">
+        <h1 style="color: black; text-align: center;">Chemotherapy Data Entry</h1>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
+mode = st.radio("Select mode", options=["Input mode", "Check mode","Prediction mode"], horizontal=True)
+
+# 輸入模式
+if mode == "Input mode":
+    st.subheader("🔮 Input Mode")
+    col1, col2 = st.columns(2)
+
+    with col1:
+        number = st.text_input("Patient ID (chemotherapy data)", key="predict_id")
+        weight = st.number_input("Weight (kg)", min_value=0.0, format="%.1f")
+        gender = st.selectbox("Gender", ["Male", "Female"])
+        gender_value = 1 if gender == "Male" else 0
+        age = st.number_input("Age", min_value=0)
+        aki_history = st.checkbox("AKI History (Check if Yes)")
+
+    with col2:
+        treatment_date = st.date_input("Treatment Date", datetime.date.today())
+        cycle_no = st.number_input("Cycle Number", min_value=1)
+        cis_dose = st.number_input("Cisplatin Dose (mg)", min_value=0.0, format="%.1f")
+        carb_dose = st.number_input("Carboplatin Dose (mg)", min_value=0.0, format="%.1f")
+        dose_percentage = st.number_input("Dose percentage (%)", min_value=0, max_value=100)
+        
+    if st.button("Submit Chemo Data"):
+        treatment_date_str = treatment_date.strftime("%Y/%m/%d")
+        number = str(number).zfill(8)  # 強制補滿8位數
+        chemo_data_list = [
+            number, gender_value, weight, age, 
+            treatment_date_str, cycle_no, dose_percentage, cis_dose, carb_dose, aki_history 
+        ]
+    
+        # 回傳資料行、AKI 判定結果、病人 ID
+        row_to_write = save_to_gsheet(chemo_data_list, "chemo_data")
+
+        # 這裡才送出資料
+        sheet = get_gsheet_client().open("web data").worksheet("chemo_data")
+        sheet.append_row(row_to_write, value_input_option="USER_ENTERED")
+    
+        st.success("✅ Data submitted successfully!")
+        # 👉 顯示剛剛輸入的資料
+        chemo_df = pd.DataFrame([chemo_data_list], columns=['Number','Gender','Weight', 'Age','Date','Cycle','Dose percentage(%)','Cisplatin dose','Carboplatin dose','AKI history'])
+        st.subheader("🧾 Submitted Data")
+        st.dataframe(chemo_df)
+        
+        
+# -----------------------------
+# 預覽模式
+elif mode == "Check mode":
+    st.subheader("🗂️ Check Mode")
+    number_preview = st.text_input("Input patient ID", key="preview_id")
+    if st.button("Check Chemo Data"):
+        number_preview = str(number_preview).zfill(8)  # 強制補滿8位數
+        if number_preview:
+            try:
+                client = get_gsheet_client()
+                sheet = client.open("web data").worksheet("chemo_data")
+                all_data = sheet.get_all_records()
+                df = pd.DataFrame(all_data)
+                preview_cols = ['Number', 'weight', 'sex_male', 'age', 'Index_date 1(dose)', 'cis_cycle', 'carb_cycle', 'cis_dose','carb_dose','aki_history']
+                filtered_df = df[preview_cols]
+                # 👉 將 Number 欄位全部轉成補滿8位的字串格式
+                filtered_df['Number'] = filtered_df['Number'].astype(str).str.zfill(8)
+                filtered_df = filtered_df[filtered_df['Number'] == number_preview]
+                
+                if not filtered_df.empty:
+                    st.subheader(f"Patient information（ID: {number_preview}）")
+                    st.dataframe(filtered_df)
+                else:
+                    st.info("❗ The patient has no chemotherapy data")
+            except Exception as e:
+                st.error(f"Something wrong when loading Google Sheet ：{e}")
+        else:
+            st.warning("Please enter patient ID")
+# -----------------------------
+# 預測模式
 
 elif mode == "Prediction mode":
     st.subheader("🔮 AKD & AKI prediction")    
@@ -700,6 +700,7 @@ elif mode == "Prediction mode":
 
             except Exception as e:
                 st.error(f"Error processing your request: {e}")
+
 
 
 
