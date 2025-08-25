@@ -17,6 +17,8 @@ from keras.models import load_model
 
 import tensorflow as tf
 
+# Streamlit 版本
+st.write("**Streamlit version:**", st.__version__)
 
 #超重要，model的threshold (目前沒用到)
 AKD_optimal_threshold = 0.29
@@ -764,6 +766,7 @@ elif mode == "Prediction mode":
 
             except Exception as e:
                 st.error(f"Error processing your request: {e}")
+
 
 
 
