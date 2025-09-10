@@ -1,17 +1,10 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Dec  2 10:57:34 2024
-
-@author: kevin
-"""
-
 import qrcode
 from io import BytesIO
 import streamlit as st
 from PIL import Image
 
-# 应用网址
-app_url = "https://msgfuuqy6pzr3hqgghv5v8.streamlit.app/"
+# ✅ 正確的應用網址
+app_url = "https://research-msgfuuqy6pzr3hqgghv5v8.streamlit.app/"
 
 # 生成二维码
 qr = qrcode.QRCode(
@@ -23,6 +16,7 @@ qr = qrcode.QRCode(
 qr.add_data(app_url)
 qr.make(fit=True)
 
+# 轉成圖片
 img = qr.make_image(fill_color="black", back_color="white")
 buffer = BytesIO()
 img.save(buffer, format="PNG")
