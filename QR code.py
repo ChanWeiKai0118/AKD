@@ -11,7 +11,7 @@ import streamlit as st
 from PIL import Image
 
 # 应用网址
-app_url = "https://rgz466o9vkchcl7vz469ez.streamlit.app/"
+app_url = "https://msgfuuqy6pzr3hqgghv5v8.streamlit.app/"
 
 # 生成二维码
 qr = qrcode.QRCode(
